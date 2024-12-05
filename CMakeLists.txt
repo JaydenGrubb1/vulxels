@@ -22,12 +22,14 @@ add_executable(
 find_package(Vulkan REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(glm REQUIRED)
+find_package(EnTT REQUIRED)
 
 include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/include
 	${Vulkan_INCLUDE}
 	${SDL2_INCLUDE_DIRS}
 	${GLM_INCLUDE_DIRS}
+	${EnTT_INCLUDE_DIRS}
 )
 
 target_link_libraries(
@@ -35,6 +37,7 @@ target_link_libraries(
 	${Vulkan_LIBRARIES}
 	${SDL2_LIBRARIES}
 	${GLM_LIBRARIES}
+	${EnTT_LIBRARIES}
 )
 
 if (CMAKE_IMPORT_LIBRARY_SUFFIX)
