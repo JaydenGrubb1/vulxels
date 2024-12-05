@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.12)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
 
-project(Example)
+project(vulxels)
 enable_language(CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -16,18 +16,25 @@ add_compile_options(
 add_executable(
 	${PROJECT_NAME}
 	src/main.cpp
+	src/app.cpp
 )
 
-# find_package(Example REQUIRED)
+find_package(Vulkan REQUIRED)
+find_package(SDL2 REQUIRED)
+find_package(glm REQUIRED)
 
 include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/include
-	# ${Example_INCLUDE_DIRS}
+	${Vulkan_INCLUDE}
+	${SDL2_INCLUDE_DIRS}
+	${GLM_INCLUDE_DIRS}
 )
 
 target_link_libraries(
 	${PROJECT_NAME}
-	# ${Example_LIBRARIES}
+	${Vulkan_LIBRARIES}
+	${SDL2_LIBRARIES}
+	${GLM_LIBRARIES}
 )
 
 if (CMAKE_IMPORT_LIBRARY_SUFFIX)

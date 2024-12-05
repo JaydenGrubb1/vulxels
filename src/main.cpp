@@ -1,11 +1,40 @@
 #include <cstdio>
 #include <cstdlib>
+#include <exception>
+#include <getopt.h>
+
+#include <SDL2/SDL.h>
+
+#include <vulxels/app.h>
+#include <vulxels/version.h>
 
 int main(int argc, char **argv) {
-	std::printf("Hello, World!\n");
+	int opt;
+	while ((opt = getopt(argc, argv, "vh")) != -1) {
+		switch (opt) {
+			case 'v':
+				printf("Vulxels version %d.%d.%d\n",
+					   VULXELS_VERSION_MAJOR,
+					   VULXELS_VERSION_MINOR,
+					   VULXELS_VERSION_PATCH);
+				return EXIT_SUCCESS;
+			case 'h':
+			default:
+				printf("Usage: %s [-s] [-v] [-h]\n", argv[0]);
+				printf("  -s: Run the application in server mode\n");
+				printf("  -v: Print the version of the application\n");
+				printf("  -h: Print this help message\n");
+				return EXIT_SUCCESS;
+		}
+	}
 
-	for (int i = 0; i < argc; i++) {
-		std::printf("argv[%d] = %s\n", i, argv[i]);
+	try {
+		Vulxels::App app;
+		app.run();
+	} catch (const std::exception &e) {
+		fprintf(stderr, "\u001b[31mUnhandled exception: %s\u001b[0m\n", e.what());
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Unhandled exception", e.what(), nullptr);
+		return EXIT_FAILURE;
 	}
 
 	return EXIT_SUCCESS;
