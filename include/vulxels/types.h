@@ -26,3 +26,6 @@ using i64 = int64_t;
 
 using usize = size_t;
 using isize = ptrdiff_t;
+
+using f32 = float;
+using f64 = double;

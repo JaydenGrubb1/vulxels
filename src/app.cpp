@@ -11,14 +11,17 @@
 
 #include <cstdio>
 #include <stdexcept>
+#include <thread>
 
 #include <SDL2/SDL.h>
 
 #include <vulxels/app.h>
+#include <vulxels/types.h>
 
 using namespace Vulxels;
 
 static SDL_Window *s_window;
+static bool s_running = true;
 
 App::App() {
 	SDL_Init(SDL_INIT_VIDEO);
@@ -35,14 +38,45 @@ App::~App() {
 	SDL_Quit();
 }
 
+static void fixed_update() {
+	// Placeholder for fixed update
+}
+
+static void render_update(float delta) {
+	// Placeholder for render update
+	(void)delta;
+}
+
+static void late_update(float delta) {
+	// Placeholder for late update
+	(void)delta;
+}
+
 void App::run() {
-	bool running = true;
+	auto fixed_loop = std::thread([]() {
+		while (s_running) {
+			fixed_update();
+			std::this_thread::sleep_for(std::chrono::milliseconds(16));
+		}
+	});
+
 	SDL_Event e;
-	while (running) {
+	f32 last_time = static_cast<f32>(SDL_GetTicks());
+
+	while (s_running) {
+		f32 current_time = static_cast<f32>(SDL_GetTicks());
+		f32 delta = current_time - last_time;
+		last_time = current_time;
+
+		render_update(delta);
+		late_update(delta);
+
 		while (SDL_PollEvent(&e) != 0) {
 			if (e.type == SDL_QUIT) {
-				running = false;
+				s_running = false;
 			}
 		}
 	}
+
+	fixed_loop.join();
 }
