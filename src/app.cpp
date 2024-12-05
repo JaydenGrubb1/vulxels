@@ -16,21 +16,26 @@
 #include <SDL2/SDL.h>
 
 #include <vulxels/app.h>
+#include <vulxels/gfx/renderer.h>
 #include <vulxels/types.h>
+#include <vulxels/version.h>
 
 using namespace Vulxels;
 
 static SDL_Window *s_window;
+static GFX::Renderer s_renderer;
 static bool s_running = true;
 
 App::App() {
 	SDL_Init(SDL_INIT_VIDEO);
-	s_window = SDL_CreateWindow("Vulxels", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-								800, 600, SDL_WINDOW_SHOWN);
+	s_window = SDL_CreateWindow("Vulxels", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+								800, 600, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
 
 	if (s_window == nullptr) {
 		throw std::runtime_error("Failed to create window");
 	}
+
+	s_renderer = GFX::Renderer(s_window);
 }
 
 App::~App() {

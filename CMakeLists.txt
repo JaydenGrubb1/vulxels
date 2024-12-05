@@ -17,6 +17,7 @@ add_executable(
 	${PROJECT_NAME}
 	src/main.cpp
 	src/app.cpp
+	src/gfx/renderer.cpp
 )
 
 find_package(Vulkan REQUIRED)
