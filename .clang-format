@@ -1,0 +1,12 @@
+BasedOnStyle: LLVM
+UseTab: Always
+TabWidth: 4
+IndentWidth: 4
+IndentCaseLabels: true
+BreakBeforeBraces: Attach
+AlignAfterOpenBracket: BlockIndent
+BinPackArguments: false
+BinPackParameters: false
+NamespaceIndentation: All
+FixNamespaceComments: false
+ColumnLimit: 0
