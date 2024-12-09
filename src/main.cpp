@@ -13,15 +13,16 @@ int main(int argc, char **argv) {
 	while ((opt = getopt(argc, argv, "vh")) != -1) {
 		switch (opt) {
 			case 'v':
-				printf("Vulxels version %d.%d.%d\n",
-					   VULXELS_VERSION_MAJOR,
-					   VULXELS_VERSION_MINOR,
-					   VULXELS_VERSION_PATCH);
+				printf(
+					"Vulxels version %d.%d.%d\n",
+					VULXELS_VERSION_MAJOR,
+					VULXELS_VERSION_MINOR,
+					VULXELS_VERSION_PATCH
+				);
 				return EXIT_SUCCESS;
 			case 'h':
 			default:
-				printf("Usage: %s [-s] [-v] [-h]\n", argv[0]);
-				printf("  -s: Run the application in server mode\n");
+				printf("Usage: %s [-v] [-h]\n", argv[0]);
 				printf("  -v: Print the version of the application\n");
 				printf("  -h: Print this help message\n");
 				return EXIT_SUCCESS;
