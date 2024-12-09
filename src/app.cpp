@@ -34,7 +34,7 @@ App::App() {
 		throw std::runtime_error("Failed to create window");
 	}
 
-	m_renderer = GFX::Renderer(m_window);
+	new (&m_renderer) GFX::Renderer(m_window);
 }
 
 App::~App() {

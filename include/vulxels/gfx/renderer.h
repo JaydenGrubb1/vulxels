@@ -11,10 +11,9 @@
 
 #pragma once
 
-#include <vector>
+#include <utility>
 
 #include <SDL2/SDL.h>
-#include <vulkan/vulkan.hpp>
 
 namespace Vulxels::GFX {
 	class Renderer {
@@ -24,9 +23,9 @@ namespace Vulxels::GFX {
 		~Renderer();
 
 	  private:
-		vk::ApplicationInfo m_appinfo;
-		vk::Instance m_instance;
-		vk::SurfaceKHR m_surface;
-		SDL_Window *m_window;
+		struct State;
+		State *m_state;
+		void check_extensions(SDL_Window *window);
+		void check_layers();
 	};
 }
