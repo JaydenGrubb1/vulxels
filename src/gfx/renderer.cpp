@@ -26,12 +26,17 @@
 using namespace Vulxels::GFX;
 
 #ifdef DNDEBUG
-static constexpr std::array<const char *, 0> VALIDATION_LAYERS = {};
+static constexpr std::array<const char *, 0> s_validation_layers = {};
 #else
-static constexpr std::array VALIDATION_LAYERS = {"VK_LAYER_KHRONOS_validation"};
+static constexpr std::array s_validation_layers = {
+	"VK_LAYER_KHRONOS_validation"
+};
 #endif
 
-static constexpr std::array DEVICE_EXTENSIONS = {
+static constexpr std::array s_instance_extensions = {
+	VK_KHR_SURFACE_EXTENSION_NAME
+};
+static constexpr std::array s_device_extensions = {
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
@@ -52,13 +57,17 @@ struct Renderer::State {
 	QueueFamily present_queue;
 };
 
-static bool check_extensions(Renderer::State *state, SDL_Window *window) {
+static bool find_and_check_required_extensions(Renderer::State *state, SDL_Window *window) {
 	u32 count;
 	SDL_Vulkan_GetInstanceExtensions(window, &count, nullptr);
 	state->extensions.resize(count);
 	SDL_Vulkan_GetInstanceExtensions(window, &count, state->extensions.data());
 
-	// TODO: Push additional required extensions
+	state->extensions.insert(
+		state->extensions.end(),
+		s_instance_extensions.begin(),
+		s_instance_extensions.end()
+	);
 
 #ifndef DNDEBUG
 	printf("Required Vulkan extensions:\n");
@@ -83,9 +92,9 @@ static bool check_extensions(Renderer::State *state, SDL_Window *window) {
 	return true;
 }
 
-static bool check_layers(Renderer::State *state) {
+static bool check_validation_layers(Renderer::State *state) {
 	auto supported = state->context.enumerateInstanceLayerProperties();
-	for (const auto &layer : VALIDATION_LAYERS) {
+	for (const auto &layer : s_validation_layers) {
 		bool found = false;
 		for (const auto &sup : supported) {
 			if (strcmp(layer, sup.layerName) == 0) {
@@ -124,11 +133,11 @@ Renderer::Renderer(SDL_Window *window) {
 	m_state->appinfo.engineVersion = VK_API_VERSION_1_2;
 	m_state->appinfo.apiVersion = VK_API_VERSION_1_2;
 
-	if (!check_extensions(m_state, window)) {
-		throw std::runtime_error("Failed to find required Vulkan extensions");
+	if (!find_and_check_required_extensions(m_state, window)) {
+		throw std::runtime_error("Vulkan instance does not support required extensions");
 	}
-	if (!check_layers(m_state)) {
-		throw std::runtime_error("Failed to find required Vulkan layers");
+	if (!check_validation_layers(m_state)) {
+		throw std::runtime_error("Vulkan instance does not support required validation layers");
 	}
 
 	m_state->instance = vk::raii::Instance(
@@ -136,7 +145,7 @@ Renderer::Renderer(SDL_Window *window) {
 		vk::InstanceCreateInfo()
 			.setPApplicationInfo(&m_state->appinfo)
 			.setPEnabledExtensionNames(m_state->extensions)
-			.setPEnabledLayerNames(VALIDATION_LAYERS)
+			.setPEnabledLayerNames(s_validation_layers)
 	);
 
 	VkSurfaceKHR surface;
@@ -191,8 +200,8 @@ Renderer::Renderer(SDL_Window *window) {
 	m_state->device = vk::raii::Device(
 		m_state->physical_device,
 		vk::DeviceCreateInfo()
-			.setPEnabledLayerNames(VALIDATION_LAYERS)
-			.setPEnabledExtensionNames(DEVICE_EXTENSIONS)
+			.setPEnabledLayerNames(s_validation_layers)
+			.setPEnabledExtensionNames(s_device_extensions)
 			.setQueueCreateInfos(queue_create_infos)
 			.setPEnabledFeatures(&features)
 	);
