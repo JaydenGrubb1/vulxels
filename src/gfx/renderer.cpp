@@ -12,6 +12,7 @@
 #include <array>
 #include <cstdio>
 #include <cstring>
+#include <limits>
 #include <optional>
 #include <set>
 
@@ -45,6 +46,126 @@ struct QueueFamily {
 	vk::raii::Queue queue = nullptr;
 };
 
+struct Swapchain {
+	std::optional<vk::SurfaceFormatKHR> m_format;
+	std::optional<vk::PresentModeKHR> m_present_mode;
+	vk::Extent2D m_extent;
+	u32 m_image_count;
+
+	vk::raii::SwapchainKHR swapchain = nullptr;
+	std::vector<vk::Image> images;
+	std::vector<vk::raii::ImageView> image_views;
+
+	Swapchain() = default;
+	Swapchain(vk::raii::PhysicalDevice &physical_device, vk::raii::Device &device, vk::raii::SurfaceKHR &surface, SDL_Window *window, std::pair<u32, u32> families) {
+		auto capabilities = physical_device.getSurfaceCapabilitiesKHR(surface);
+		auto formats = physical_device.getSurfaceFormatsKHR(surface);
+		auto modes = physical_device.getSurfacePresentModesKHR(surface);
+
+		for (const auto &format : formats) {
+			if (format.format == vk::Format::eB8G8R8A8Srgb && format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear) {
+				m_format = format;
+				break;
+			}
+		}
+		if (!m_format) {
+			throw std::runtime_error("Failed to find suitable surface format");
+		}
+		// TODO: Pick a format properly, this will do for now
+
+		for (const auto &mode : modes) {
+			if (mode == vk::PresentModeKHR::eMailbox) {
+				m_present_mode = mode;
+				break;
+			}
+		}
+		if (!m_present_mode) {
+			throw std::runtime_error("Failed to find suitable present mode");
+		}
+		// TODO: Pick a present mode properly, this will do for now
+
+		if (capabilities.currentExtent.width == std::numeric_limits<u32>::max()) {
+			int width, height;
+			SDL_Vulkan_GetDrawableSize(window, &width, &height);
+			m_extent.width = std::clamp<u32>(
+				width,
+				capabilities.minImageExtent.width,
+				capabilities.maxImageExtent.width
+			);
+			m_extent.height = std::clamp<u32>(
+				height,
+				capabilities.minImageExtent.height,
+				capabilities.maxImageExtent.height
+			);
+		} else {
+			m_extent = capabilities.currentExtent;
+		}
+
+#ifndef DNDEBUG
+		printf("Swapchain extent: %dx%d\n", m_extent.width, m_extent.height);
+#endif
+
+		m_image_count = capabilities.minImageCount + 1;
+		if (capabilities.maxImageCount > 0) {
+			m_image_count = std::min<u32>(m_image_count, capabilities.maxImageCount);
+		}
+
+		vk::SwapchainCreateInfoKHR info;
+		info.surface = surface;
+		info.minImageCount = m_image_count;
+		info.imageFormat = m_format->format;
+		info.imageColorSpace = m_format->colorSpace;
+		info.imageArrayLayers = 1;
+		info.imageExtent = m_extent;
+		info.imageUsage = vk::ImageUsageFlagBits::eColorAttachment; // Post-processing will require a different usage
+		info.preTransform = capabilities.currentTransform;
+		info.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
+		info.presentMode = m_present_mode.value();
+		info.clipped = VK_TRUE;
+		info.oldSwapchain = nullptr; // TODO: Implement swapchain recreation
+
+		std::array<u32, 2> queue_families = {families.first, families.second};
+		if (families.first == families.second) {
+			info.imageSharingMode = vk::SharingMode::eExclusive;
+		} else {
+			info.imageSharingMode = vk::SharingMode::eConcurrent;
+			info.queueFamilyIndexCount = 2;
+			info.pQueueFamilyIndices = queue_families.data();
+		}
+
+		swapchain = vk::raii::SwapchainKHR(device, info);
+		images = swapchain.getImages();
+
+		image_views.reserve(images.size());
+		for (const auto &image : images) {
+			image_views.push_back(
+				vk::raii::ImageView(
+					device,
+					vk::ImageViewCreateInfo()
+						.setImage(image)
+						.setViewType(vk::ImageViewType::e2D)
+						.setFormat(m_format->format)
+						.setComponents({vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity})
+						.setSubresourceRange({vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1})
+				)
+			);
+		}
+	}
+
+	Swapchain &operator=(Swapchain &&other) {
+		if (this != &other) {
+			m_format = std::exchange(other.m_format, std::nullopt);
+			m_present_mode = std::exchange(other.m_present_mode, std::nullopt);
+			m_extent = std::exchange(other.m_extent, vk::Extent2D());
+			m_image_count = std::exchange(other.m_image_count, 0);
+			swapchain = std::exchange(other.swapchain, nullptr);
+			images = std::exchange(other.images, {});
+			image_views = std::exchange(other.image_views, {});
+		}
+		return *this;
+	}
+};
+
 struct Renderer::State {
 	vk::raii::Context context;
 	vk::ApplicationInfo appinfo;
@@ -55,6 +176,7 @@ struct Renderer::State {
 	vk::raii::Device device = nullptr;
 	QueueFamily graphics_queue;
 	QueueFamily present_queue;
+	Swapchain swapchain;
 };
 
 static bool find_and_check_required_extensions(Renderer::State *state, SDL_Window *window) {
@@ -208,6 +330,14 @@ Renderer::Renderer(SDL_Window *window) {
 
 	m_state->graphics_queue.queue = m_state->device.getQueue(m_state->graphics_queue.index.value(), 0);
 	m_state->present_queue.queue = m_state->device.getQueue(m_state->present_queue.index.value(), 0);
+
+	m_state->swapchain = Swapchain(
+		m_state->physical_device,
+		m_state->device,
+		m_state->surface,
+		window,
+		{m_state->graphics_queue.index.value(), m_state->present_queue.index.value()}
+	);
 }
 
 Renderer::~Renderer() {
