@@ -22,9 +22,12 @@ namespace Vulxels::GFX {
 		Renderer(SDL_Window *window);
 		~Renderer();
 
-		struct State;
-
 	  private:
+		struct State;
 		State *m_state;
+
+		bool find_and_check_required_extensions(SDL_Window *window);
+		bool check_validation_layers();
+		bool find_queue_families();
 	};
 }

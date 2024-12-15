@@ -179,58 +179,6 @@ struct Renderer::State {
 	Swapchain swapchain;
 };
 
-static bool find_and_check_required_extensions(Renderer::State *state, SDL_Window *window) {
-	u32 count;
-	SDL_Vulkan_GetInstanceExtensions(window, &count, nullptr);
-	state->extensions.resize(count);
-	SDL_Vulkan_GetInstanceExtensions(window, &count, state->extensions.data());
-
-	state->extensions.insert(
-		state->extensions.end(),
-		s_instance_extensions.begin(),
-		s_instance_extensions.end()
-	);
-
-#ifndef DNDEBUG
-	printf("Required Vulkan extensions:\n");
-	for (const auto &ext : state->extensions) {
-		printf("  %s\n", ext);
-	}
-#endif
-
-	auto supported = state->context.enumerateInstanceExtensionProperties();
-	for (const auto &ext : state->extensions) {
-		bool found = false;
-		for (const auto &sup : supported) {
-			if (strcmp(ext, sup.extensionName) == 0) {
-				found = true;
-				break;
-			}
-		}
-		if (!found) {
-			return false;
-		}
-	}
-	return true;
-}
-
-static bool check_validation_layers(Renderer::State *state) {
-	auto supported = state->context.enumerateInstanceLayerProperties();
-	for (const auto &layer : s_validation_layers) {
-		bool found = false;
-		for (const auto &sup : supported) {
-			if (strcmp(layer, sup.layerName) == 0) {
-				found = true;
-				break;
-			}
-		}
-		if (!found) {
-			return false;
-		}
-	}
-	return true;
-}
-
 Renderer::Renderer(SDL_Window *window) {
 	m_state = new State;
 	u32 ver = m_state->context.enumerateInstanceVersion();
@@ -255,10 +203,10 @@ Renderer::Renderer(SDL_Window *window) {
 	m_state->appinfo.engineVersion = VK_API_VERSION_1_2;
 	m_state->appinfo.apiVersion = VK_API_VERSION_1_2;
 
-	if (!find_and_check_required_extensions(m_state, window)) {
+	if (!find_and_check_required_extensions(window)) {
 		throw std::runtime_error("Vulkan instance does not support required extensions");
 	}
-	if (!check_validation_layers(m_state)) {
+	if (!check_validation_layers()) {
 		throw std::runtime_error("Vulkan instance does not support required validation layers");
 	}
 
@@ -283,20 +231,7 @@ Renderer::Renderer(SDL_Window *window) {
 	printf("Using physical device: %s\n", m_state->physical_device.getProperties().deviceName.data());
 #endif
 
-	auto queue_families = m_state->physical_device.getQueueFamilyProperties();
-	for (u32 i = 0; i < queue_families.size(); i++) {
-		if (queue_families[i].queueFlags & vk::QueueFlagBits::eGraphics) {
-			m_state->graphics_queue.index = i;
-		}
-		if (m_state->physical_device.getSurfaceSupportKHR(i, *m_state->surface)) {
-			m_state->present_queue.index = i;
-		}
-		if (m_state->graphics_queue.index == m_state->present_queue.index) {
-			break;
-		}
-	}
-
-	if (!m_state->graphics_queue.index.has_value() || !m_state->present_queue.index.has_value()) {
+	if (!find_queue_families()) {
 		throw std::runtime_error("Failed to find required queue families");
 	}
 
@@ -342,4 +277,72 @@ Renderer::Renderer(SDL_Window *window) {
 
 Renderer::~Renderer() {
 	delete m_state;
+}
+
+bool Renderer::find_and_check_required_extensions(SDL_Window *window) {
+	u32 count;
+	SDL_Vulkan_GetInstanceExtensions(window, &count, nullptr);
+	m_state->extensions.resize(count);
+	SDL_Vulkan_GetInstanceExtensions(window, &count, m_state->extensions.data());
+
+	m_state->extensions.insert(
+		m_state->extensions.end(),
+		s_instance_extensions.begin(),
+		s_instance_extensions.end()
+	);
+
+#ifndef DNDEBUG
+	printf("Required Vulkan extensions:\n");
+	for (const auto &ext : m_state->extensions) {
+		printf("  %s\n", ext);
+	}
+#endif
+
+	auto supported = m_state->context.enumerateInstanceExtensionProperties();
+	for (const auto &ext : m_state->extensions) {
+		bool found = false;
+		for (const auto &sup : supported) {
+			if (strcmp(ext, sup.extensionName) == 0) {
+				found = true;
+				break;
+			}
+		}
+		if (!found) {
+			return false;
+		}
+	}
+	return true;
+}
+
+bool Renderer::check_validation_layers() {
+	auto supported = m_state->context.enumerateInstanceLayerProperties();
+	for (const auto &layer : s_validation_layers) {
+		bool found = false;
+		for (const auto &sup : supported) {
+			if (strcmp(layer, sup.layerName) == 0) {
+				found = true;
+				break;
+			}
+		}
+		if (!found) {
+			return false;
+		}
+	}
+	return true;
+}
+
+bool Renderer::find_queue_families() {
+	auto queue_families = m_state->physical_device.getQueueFamilyProperties();
+	for (u32 i = 0; i < queue_families.size(); i++) {
+		if (queue_families[i].queueFlags & vk::QueueFlagBits::eGraphics) {
+			m_state->graphics_queue.index = i;
+		}
+		if (m_state->physical_device.getSurfaceSupportKHR(i, *m_state->surface)) {
+			m_state->present_queue.index = i;
+		}
+		if (m_state->graphics_queue.index == m_state->present_queue.index) {
+			break;
+		}
+	}
+	return m_state->graphics_queue.index.has_value() && m_state->present_queue.index.has_value();
 }
