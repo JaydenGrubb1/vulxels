@@ -44,9 +44,10 @@ namespace Vulxels::GFX {
 		Swapchain(const Swapchain &) = delete;
 		Swapchain &operator=(const Swapchain &) = delete;
 
-		Swapchain(Swapchain &&other) noexcept : m_state(std::exchange(other.m_state, nullptr)) {}
+		Swapchain(Swapchain &&other) noexcept : m_state(std::exchange(other.m_state, nullptr)), m_renderer(std::exchange(other.m_renderer, nullptr)) {}
 		Swapchain &operator=(Swapchain &&other) noexcept {
 			std::swap(m_state, other.m_state);
+			std::swap(m_renderer, other.m_renderer);
 			return *this;
 		}
 
