@@ -9,37 +9,32 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#include <SDL2/SDL_vulkan.h>
+#include <vulxels/gfx/renderer.h>
+#include <vulxels/types.h>
+#include <vulxels/version.h>
+
 #include <array>
 #include <cstdio>
 #include <cstring>
 #include <limits>
 #include <optional>
 #include <set>
-
-#include <SDL2/SDL_vulkan.h>
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>
-
-#include <vulxels/gfx/renderer.h>
-#include <vulxels/types.h>
-#include <vulxels/version.h>
 
 using namespace Vulxels::GFX;
 
 #ifdef DNDEBUG
-static constexpr std::array<const char *, 0> s_validation_layers = {};
+static constexpr std::array<const char*, 0> s_validation_layers = {};
 #else
 static constexpr std::array s_validation_layers = {
-	"VK_LAYER_KHRONOS_validation"
+	"VK_LAYER_KHRONOS_validation",
 };
 #endif
 
-static constexpr std::array s_instance_extensions = {
-	VK_KHR_SURFACE_EXTENSION_NAME
-};
-static constexpr std::array s_device_extensions = {
-	VK_KHR_SWAPCHAIN_EXTENSION_NAME
-};
+static constexpr std::array s_instance_extensions = {VK_KHR_SURFACE_EXTENSION_NAME};
+static constexpr std::array s_device_extensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
 struct QueueFamily {
 	std::optional<u32> index;
@@ -49,7 +44,7 @@ struct QueueFamily {
 struct Renderer::State {
 	vk::raii::Context context;
 	vk::ApplicationInfo appinfo;
-	std::vector<const char *> extensions;
+	std::vector<const char*> extensions;
 	vk::raii::Instance instance = nullptr;
 	vk::raii::SurfaceKHR surface = nullptr;
 	vk::raii::PhysicalDevice physical_device = nullptr;
@@ -59,7 +54,7 @@ struct Renderer::State {
 	Swapchain swapchain;
 };
 
-Renderer::Renderer(SDL_Window *window) {
+Renderer::Renderer(SDL_Window* window) {
 	m_state = new State;
 	u32 ver = m_state->context.enumerateInstanceVersion();
 
@@ -78,7 +73,11 @@ Renderer::Renderer(SDL_Window *window) {
 	}
 
 	m_state->appinfo.pApplicationName = "Vulxels";
-	m_state->appinfo.applicationVersion = VK_MAKE_VERSION(VULXELS_VERSION_MAJOR, VULXELS_VERSION_MINOR, VULXELS_VERSION_PATCH);
+	m_state->appinfo.applicationVersion = VK_MAKE_VERSION(
+		VULXELS_VERSION_MAJOR,
+		VULXELS_VERSION_MINOR,
+		VULXELS_VERSION_PATCH
+	);
 	m_state->appinfo.pEngineName = "Vulxels";
 	m_state->appinfo.engineVersion = VK_API_VERSION_1_2;
 	m_state->appinfo.apiVersion = VK_API_VERSION_1_2;
@@ -87,7 +86,9 @@ Renderer::Renderer(SDL_Window *window) {
 		throw std::runtime_error("Vulkan instance does not support required extensions");
 	}
 	if (!check_validation_layers()) {
-		throw std::runtime_error("Vulkan instance does not support required validation layers");
+		throw std::runtime_error(
+			"Vulkan instance does not support required validation layers"
+		);
 	}
 
 	m_state->instance = vk::raii::Instance(
@@ -108,7 +109,10 @@ Renderer::Renderer(SDL_Window *window) {
 	// TODO: Pick a device properly, this will do for now
 
 #ifndef DNDEBUG
-	printf("Using physical device: %s\n", m_state->physical_device.getProperties().deviceName.data());
+	printf(
+		"Using physical device: %s\n",
+		m_state->physical_device.getProperties().deviceName.data()
+	);
 #endif
 
 	if (!find_queue_families()) {
@@ -123,12 +127,10 @@ Renderer::Renderer(SDL_Window *window) {
 	std::vector<vk::DeviceQueueCreateInfo> queue_create_infos;
 	f32 queue_priority = 1.0f;
 	for (u32 queue_family : unique_queue_families) {
-		queue_create_infos.push_back(
-			vk::DeviceQueueCreateInfo()
-				.setQueueFamilyIndex(queue_family)
-				.setQueueCount(1)
-				.setPQueuePriorities(&queue_priority)
-		);
+		queue_create_infos.push_back(vk::DeviceQueueCreateInfo()
+										 .setQueueFamilyIndex(queue_family)
+										 .setQueueCount(1)
+										 .setPQueuePriorities(&queue_priority));
 	}
 
 	vk::PhysicalDeviceFeatures features;
@@ -143,8 +145,10 @@ Renderer::Renderer(SDL_Window *window) {
 			.setPEnabledFeatures(&features)
 	);
 
-	m_state->graphics_queue.queue = m_state->device.getQueue(m_state->graphics_queue.index.value(), 0);
-	m_state->present_queue.queue = m_state->device.getQueue(m_state->present_queue.index.value(), 0);
+	m_state->graphics_queue.queue =
+		m_state->device.getQueue(m_state->graphics_queue.index.value(), 0);
+	m_state->present_queue.queue =
+		m_state->device.getQueue(m_state->present_queue.index.value(), 0);
 
 	m_state->swapchain = Swapchain(this, window);
 	m_state->swapchain.create();
@@ -155,7 +159,7 @@ Renderer::~Renderer() {
 	delete m_state;
 }
 
-bool Renderer::find_and_check_required_extensions(SDL_Window *window) {
+bool Renderer::find_and_check_required_extensions(SDL_Window* window) {
 	u32 count;
 	SDL_Vulkan_GetInstanceExtensions(window, &count, nullptr);
 	m_state->extensions.resize(count);
@@ -169,15 +173,15 @@ bool Renderer::find_and_check_required_extensions(SDL_Window *window) {
 
 #ifndef DNDEBUG
 	printf("Required Vulkan extensions:\n");
-	for (const auto &ext : m_state->extensions) {
+	for (const auto& ext : m_state->extensions) {
 		printf("  %s\n", ext);
 	}
 #endif
 
 	auto supported = m_state->context.enumerateInstanceExtensionProperties();
-	for (const auto &ext : m_state->extensions) {
+	for (const auto& ext : m_state->extensions) {
 		bool found = false;
-		for (const auto &sup : supported) {
+		for (const auto& sup : supported) {
 			if (strcmp(ext, sup.extensionName) == 0) {
 				found = true;
 				break;
@@ -192,9 +196,9 @@ bool Renderer::find_and_check_required_extensions(SDL_Window *window) {
 
 bool Renderer::check_validation_layers() {
 	auto supported = m_state->context.enumerateInstanceLayerProperties();
-	for (const auto &layer : s_validation_layers) {
+	for (const auto& layer : s_validation_layers) {
 		bool found = false;
-		for (const auto &sup : supported) {
+		for (const auto& sup : supported) {
 			if (strcmp(layer, sup.layerName) == 0) {
 				found = true;
 				break;
@@ -220,7 +224,8 @@ bool Renderer::find_queue_families() {
 			break;
 		}
 	}
-	return m_state->graphics_queue.index.has_value() && m_state->present_queue.index.has_value();
+	return m_state->graphics_queue.index.has_value()
+		&& m_state->present_queue.index.has_value();
 }
 
 struct Swapchain::State {
@@ -233,7 +238,7 @@ struct Swapchain::State {
 	std::vector<vk::raii::ImageView> image_views;
 };
 
-Swapchain::Swapchain(Renderer *renderer, SDL_Window *window) : m_renderer(renderer) {
+Swapchain::Swapchain(Renderer* renderer, SDL_Window* window) : m_renderer(renderer) {
 	m_state = new State;
 
 	if (!pick_surface_format()) {
@@ -250,9 +255,12 @@ Swapchain::~Swapchain() {
 }
 
 bool Swapchain::pick_surface_format() {
-	auto formats = m_renderer->m_state->physical_device.getSurfaceFormatsKHR(*m_renderer->m_state->surface);
-	for (const auto &format : formats) {
-		if (format.format == vk::Format::eB8G8R8A8Srgb && format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear) {
+	auto formats = m_renderer->m_state->physical_device.getSurfaceFormatsKHR(
+		*m_renderer->m_state->surface
+	);
+	for (const auto& format : formats) {
+		if (format.format == vk::Format::eB8G8R8A8Srgb
+			&& format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear) {
 			m_state->format = format;
 			return true;
 		}
@@ -261,8 +269,10 @@ bool Swapchain::pick_surface_format() {
 }
 
 bool Swapchain::pick_present_mode() {
-	auto modes = m_renderer->m_state->physical_device.getSurfacePresentModesKHR(*m_renderer->m_state->surface);
-	for (const auto &mode : modes) {
+	auto modes = m_renderer->m_state->physical_device.getSurfacePresentModesKHR(
+		*m_renderer->m_state->surface
+	);
+	for (const auto& mode : modes) {
 		if (mode == vk::PresentModeKHR::eMailbox) {
 			m_state->present_mode = mode;
 			return true;
@@ -271,8 +281,10 @@ bool Swapchain::pick_present_mode() {
 	return false;
 }
 
-void Swapchain::find_extent(SDL_Window *window) {
-	auto capabilities = m_renderer->m_state->physical_device.getSurfaceCapabilitiesKHR(*m_renderer->m_state->surface);
+void Swapchain::find_extent(SDL_Window* window) {
+	auto capabilities = m_renderer->m_state->physical_device.getSurfaceCapabilitiesKHR(
+		*m_renderer->m_state->surface
+	);
 
 	if (capabilities.currentExtent.width == std::numeric_limits<u32>::max()) {
 		int width, height;
@@ -297,11 +309,12 @@ void Swapchain::find_extent(SDL_Window *window) {
 
 	m_state->image_count = capabilities.minImageCount + 1;
 	if (capabilities.maxImageCount > 0) {
-		m_state->image_count = std::min<u32>(m_state->image_count, capabilities.maxImageCount);
+		m_state->image_count =
+			std::min<u32>(m_state->image_count, capabilities.maxImageCount);
 	}
 }
 
-void Swapchain::create(Swapchain *old) {
+void Swapchain::create(Swapchain* old) {
 	vk::SwapchainCreateInfoKHR info;
 	info.surface = *m_renderer->m_state->surface;
 	info.minImageCount = m_state->image_count;
@@ -333,17 +346,20 @@ void Swapchain::create(Swapchain *old) {
 	m_state->images = m_state->swapchain.getImages();
 
 	m_state->image_views.reserve(m_state->images.size());
-	for (const auto &image : m_state->images) {
-		m_state->image_views.push_back(
-			vk::raii::ImageView(
-				m_renderer->m_state->device,
-				vk::ImageViewCreateInfo()
-					.setImage(image)
-					.setViewType(vk::ImageViewType::e2D)
-					.setFormat(m_state->format->format)
-					.setComponents({vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity})
-					.setSubresourceRange({vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1})
-			)
-		);
+	for (const auto& image : m_state->images) {
+		m_state->image_views.push_back(vk::raii::ImageView(
+			m_renderer->m_state->device,
+			vk::ImageViewCreateInfo()
+				.setImage(image)
+				.setViewType(vk::ImageViewType::e2D)
+				.setFormat(m_state->format->format)
+				.setComponents(
+					{vk::ComponentSwizzle::eIdentity,
+					 vk::ComponentSwizzle::eIdentity,
+					 vk::ComponentSwizzle::eIdentity,
+					 vk::ComponentSwizzle::eIdentity}
+				)
+				.setSubresourceRange({vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1})
+		));
 	}
 }

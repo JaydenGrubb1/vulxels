@@ -1,14 +1,13 @@
-#include <cstdio>
-#include <cstdlib>
-#include <exception>
-#include <getopt.h>
-
 #include <SDL2/SDL.h>
-
+#include <getopt.h>
 #include <vulxels/app.h>
 #include <vulxels/version.h>
 
-int main(int argc, char **argv) {
+#include <cstdio>
+#include <cstdlib>
+#include <exception>
+
+int main(int argc, char** argv) {
 	int opt;
 	while ((opt = getopt(argc, argv, "vh")) != -1) {
 		switch (opt) {
@@ -32,9 +31,14 @@ int main(int argc, char **argv) {
 	try {
 		Vulxels::App app;
 		app.run();
-	} catch (const std::exception &e) {
+	} catch (const std::exception& e) {
 		fprintf(stderr, "\u001b[31mUnhandled exception: %s\u001b[0m\n", e.what());
-		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Unhandled exception", e.what(), nullptr);
+		SDL_ShowSimpleMessageBox(
+			SDL_MESSAGEBOX_ERROR,
+			"Unhandled exception",
+			e.what(),
+			nullptr
+		);
 		return EXIT_FAILURE;
 	}
 

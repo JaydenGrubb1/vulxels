@@ -12,7 +12,6 @@
 #pragma once
 
 #include <SDL2/SDL.h>
-
 #include <vulxels/gfx/renderer.h>
 
 namespace Vulxels {
@@ -24,7 +23,7 @@ namespace Vulxels {
 
 	  private:
 		bool m_running = true;
-		SDL_Window *m_window;
+		SDL_Window* m_window;
 		GFX::Renderer m_renderer;
 	};
-}
+} // namespace Vulxels

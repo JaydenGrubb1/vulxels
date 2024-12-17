@@ -30,11 +30,3 @@ using isize = ptrdiff_t;
 
 using f32 = float;
 using f64 = double;
-
-namespace Vulxels {
-	template <typename T>
-	using Scope = std::unique_ptr<T>;
-
-	template <typename T>
-	using Ref = std::shared_ptr<T>;
-}

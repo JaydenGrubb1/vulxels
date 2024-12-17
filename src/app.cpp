@@ -9,13 +9,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#include <cstdio>
-#include <stdexcept>
-#include <thread>
-
 #include <vulxels/app.h>
 #include <vulxels/types.h>
 #include <vulxels/version.h>
+
+#include <cstdio>
+#include <stdexcept>
+#include <thread>
 
 using namespace Vulxels;
 
