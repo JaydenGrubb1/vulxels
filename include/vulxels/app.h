@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <SDL2/SDL.h>
 #include <vulxels/gfx/renderer.h>
+#include <vulxels/gfx/window.h>
 
 namespace Vulxels {
 	class App {
@@ -18,7 +18,7 @@ namespace Vulxels {
 
 	  private:
 		bool m_running = true;
-		SDL_Window* m_window;
-		GFX::Renderer m_renderer;
+		GFX::Window m_window {"Vulxels", 800, 600};
+		GFX::Renderer m_renderer {m_window};
 	};
 } // namespace Vulxels

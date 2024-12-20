@@ -15,9 +15,12 @@ add_compile_options(
 
 add_executable(
 	${PROJECT_NAME}
-	src/main.cpp
 	src/app.cpp
+	src/main.cpp
+	src/gfx/device.cpp
+	src/gfx/instance.cpp
 	src/gfx/renderer.cpp
+	src/gfx/window.cpp
 )
 
 find_package(Vulkan REQUIRED)

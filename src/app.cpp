@@ -15,26 +15,11 @@
 using namespace Vulxels;
 
 App::App() {
-	SDL_Init(SDL_INIT_VIDEO);
-	m_window = SDL_CreateWindow(
-		"Vulxels",
-		SDL_WINDOWPOS_CENTERED,
-		SDL_WINDOWPOS_CENTERED,
-		800,
-		600,
-		SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE
-	);
-
-	if (m_window == nullptr) {
-		throw std::runtime_error("Failed to create window");
-	}
-
-	new (&m_renderer) GFX::Renderer(m_window);
+	// TODO
 }
 
 App::~App() {
-	SDL_DestroyWindow(m_window);
-	SDL_Quit();
+	// TODO
 }
 
 static void fixed_update() {
