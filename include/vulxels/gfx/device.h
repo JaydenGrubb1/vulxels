@@ -20,6 +20,12 @@ namespace Vulxels::GFX {
 		std::optional<u32> index;
 	};
 
+	struct SwapchainSupportDetails {
+		vk::SurfaceCapabilitiesKHR capabilities;
+		std::vector<vk::SurfaceFormatKHR> formats;
+		std::vector<vk::PresentModeKHR> present_modes;
+	};
+
 	class Device {
 	  public:
 		Device(Instance& instance, Window& window);
@@ -27,6 +33,32 @@ namespace Vulxels::GFX {
 
 		Device(const Device&) = delete;
 		Device& operator=(const Device&) = delete;
+
+		vk::raii::SurfaceKHR& surface() {
+			return m_surface;
+		}
+
+		vk::raii::PhysicalDevice& physical_device() {
+			return m_physical_device;
+		}
+
+		vk::raii::Device& device() {
+			return m_device;
+		}
+
+		QueueFamily& graphics_queue() {
+			return m_graphics_queue;
+		}
+
+		QueueFamily& present_queue() {
+			return m_present_queue;
+		}
+
+		void wait_idle() {
+			m_device.waitIdle();
+		}
+
+		SwapchainSupportDetails query_swapchain_support() const;
 
 	  private:
 		Instance& m_instance;

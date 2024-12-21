@@ -20,6 +20,7 @@ add_executable(
 	src/gfx/device.cpp
 	src/gfx/instance.cpp
 	src/gfx/renderer.cpp
+	src/gfx/swapchain.cpp
 	src/gfx/window.cpp
 )
 

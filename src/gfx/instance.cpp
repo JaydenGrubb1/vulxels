@@ -10,8 +10,6 @@
 
 using namespace Vulxels::GFX;
 
-static constexpr const std::array VALIDATION_LAYERS = {"VK_LAYER_KHRONOS_validation"};
-
 Instance::Instance(Window& window) {
 	u32 api_version = m_context.enumerateInstanceVersion();
 

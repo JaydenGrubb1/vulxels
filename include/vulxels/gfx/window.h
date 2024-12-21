@@ -24,6 +24,7 @@ namespace Vulxels::GFX {
 
 		std::vector<const char*> get_required_extensions();
 		vk::raii::SurfaceKHR create_surface(vk::raii::Instance& instance);
+		vk::Extent2D extent() const;
 
 	  private:
 		SDL_Window* m_window = nullptr;

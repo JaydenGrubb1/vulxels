@@ -8,9 +8,12 @@
 
 #include <vulxels/gfx/window.h>
 
+#include <array>
 #include <vulkan/vulkan_raii.hpp>
 
 namespace Vulxels::GFX {
+	static constexpr const std::array VALIDATION_LAYERS = {"VK_LAYER_KHRONOS_validation"};
+
 	class Instance {
 	  public:
 		Instance(Window& window);
@@ -18,7 +21,9 @@ namespace Vulxels::GFX {
 		Instance(const Instance&) = delete;
 		Instance& operator=(const Instance&) = delete;
 
-		vk::raii::Instance& get() { return m_instance; }
+		vk::raii::Instance& instance() {
+			return m_instance;
+		}
 
 	  private:
 		vk::raii::Context m_context;

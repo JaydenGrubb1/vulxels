@@ -48,3 +48,9 @@ vk::raii::SurfaceKHR Window::create_surface(vk::raii::Instance& instance) {
 	}
 	return vk::raii::SurfaceKHR(instance, surface);
 }
+
+vk::Extent2D Window::extent() const {
+	int width, height;
+	SDL_Vulkan_GetDrawableSize(m_window, &width, &height);
+	return vk::Extent2D(width, height);
+}

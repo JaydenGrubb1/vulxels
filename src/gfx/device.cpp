@@ -13,8 +13,10 @@
 
 using namespace Vulxels::GFX;
 
+static constexpr const std::array DEVICE_EXTENSIONS = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+
 Device::Device(Instance& instance, Window& window) : m_instance(instance) {
-	m_surface = window.create_surface(m_instance.get());
+	m_surface = window.create_surface(m_instance.instance());
 
 	pick_physical_device();
 	find_queue_families();
@@ -25,7 +27,7 @@ Device::Device(Instance& instance, Window& window) : m_instance(instance) {
 }
 
 void Device::pick_physical_device() {
-	m_physical_device = m_instance.get().enumeratePhysicalDevices().front();
+	m_physical_device = m_instance.instance().enumeratePhysicalDevices().front();
 	// TODO: Select the best physical device
 
 	printf(
@@ -74,9 +76,17 @@ void Device::create_logical_device() {
 	m_device = vk::raii::Device(
 		m_physical_device,
 		vk::DeviceCreateInfo()
-			.setPEnabledLayerNames(nullptr)
-			.setPEnabledExtensionNames(nullptr)
+			.setPEnabledLayerNames(VALIDATION_LAYERS)
+			.setPEnabledExtensionNames(DEVICE_EXTENSIONS)
 			.setQueueCreateInfos(queue_create_infos)
 			.setPEnabledFeatures(&device_features)
 	);
+}
+
+SwapchainSupportDetails Device::query_swapchain_support() const {
+	SwapchainSupportDetails details;
+	details.capabilities = m_physical_device.getSurfaceCapabilitiesKHR(m_surface);
+	details.formats = m_physical_device.getSurfaceFormatsKHR(m_surface);
+	details.present_modes = m_physical_device.getSurfacePresentModesKHR(m_surface);
+	return details;
 }
