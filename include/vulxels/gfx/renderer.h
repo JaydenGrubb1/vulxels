@@ -8,6 +8,7 @@
 
 #include <vulxels/gfx/device.h>
 #include <vulxels/gfx/instance.h>
+#include <vulxels/gfx/shader.h>
 #include <vulxels/gfx/swapchain.h>
 #include <vulxels/gfx/window.h>
 
@@ -21,6 +22,10 @@ namespace Vulxels::GFX {
 
 		Renderer(const Renderer&) = delete;
 		Renderer& operator=(const Renderer&) = delete;
+
+		Shader create_shader(std::string_view path) {
+			return Shader(m_device, path);
+		}
 
 	  private:
 		Window& m_window;

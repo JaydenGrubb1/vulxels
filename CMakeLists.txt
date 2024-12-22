@@ -13,16 +13,23 @@ add_compile_options(
 	-Wold-style-cast
 )
 
-add_executable(
-	${PROJECT_NAME}
+set(CXX_SOURCE
 	src/app.cpp
 	src/main.cpp
 	src/gfx/device.cpp
 	src/gfx/instance.cpp
 	src/gfx/renderer.cpp
+	src/gfx/shader.cpp
 	src/gfx/swapchain.cpp
 	src/gfx/window.cpp
 )
+
+set(SHADER_SOURCE
+	shaders/simple.frag
+	shaders/simple.vert
+)
+
+add_executable(${PROJECT_NAME} ${CXX_SOURCE})
 
 find_package(Vulkan REQUIRED)
 find_package(SDL2 REQUIRED)
@@ -51,6 +58,24 @@ if (CMAKE_IMPORT_LIBRARY_SUFFIX)
 		COMMAND_EXPAND_LISTS
 	)
 endif ()
+
+find_program(GLSLC glslc REQUIRED HINTS Vulkan::glslc)
+
+foreach(GLSL ${SHADER_SOURCE})
+	get_filename_component(FILE_NAME ${GLSL} NAME)
+	set(SPIRV "${CMAKE_CURRENT_BINARY_DIR}/${FILE_NAME}.spv")
+	add_custom_command(
+		OUTPUT ${SPIRV}
+		COMMAND ${GLSLC} ${CMAKE_CURRENT_SOURCE_DIR}/${GLSL} -o ${SPIRV}
+		DEPENDS ${GLSL}
+	)
+	list(APPEND SPIRV_BINARY_FILES ${SPIRV})
+endforeach(GLSL)
+
+add_custom_target(
+	shaders ALL
+	DEPENDS ${SPIRV_BINARY_FILES}
+)
 
 add_custom_target(run
 	COMMAND ${PROJECT_NAME}
