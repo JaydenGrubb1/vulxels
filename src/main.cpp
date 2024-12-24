@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <exception>
+#include <filesystem>
 
 int main(int argc, char** argv) {
 	int opt;
@@ -33,6 +34,8 @@ int main(int argc, char** argv) {
 				return EXIT_SUCCESS;
 		}
 	}
+
+	std::filesystem::current_path(std::filesystem::path(argv[0]).parent_path());
 
 	try {
 		Vulxels::App app;
