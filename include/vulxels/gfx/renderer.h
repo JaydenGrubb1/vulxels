@@ -40,6 +40,10 @@ namespace Vulxels::GFX {
 			return Shader(m_device, path);
 		}
 
+		Pipeline::Builder create_pipeline() {
+			return Pipeline::Builder(m_device);
+		}
+
 	  private:
 		Window& m_window;
 		Instance m_instance {m_window};

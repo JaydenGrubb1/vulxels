@@ -18,6 +18,7 @@ set(CXX_SOURCE
 	src/main.cpp
 	src/gfx/device.cpp
 	src/gfx/instance.cpp
+	src/gfx/pipeline.cpp
 	src/gfx/renderer.cpp
 	src/gfx/shader.cpp
 	src/gfx/swapchain.cpp
