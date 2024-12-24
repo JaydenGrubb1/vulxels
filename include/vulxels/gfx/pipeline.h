@@ -35,7 +35,31 @@ namespace Vulxels::GFX {
 				return *this;
 			}
 
-			// TODO: VertexInputState functions
+			Builder& add_vertex_binding_description(
+				u32 binding,
+				u32 stride,
+				vk::VertexInputRate rate
+			) {
+				vertex_bindings.push_back(vk::VertexInputBindingDescription()
+											  .setBinding(binding)
+											  .setStride(stride)
+											  .setInputRate(rate));
+				return *this;
+			}
+
+			Builder& add_vertex_attribute_description(
+				u32 binding,
+				u32 location,
+				vk::Format format,
+				u32 offset
+			) {
+				vertex_attributes.push_back(vk::VertexInputAttributeDescription()
+												.setBinding(binding)
+												.setLocation(location)
+												.setFormat(format)
+												.setOffset(offset));
+				return *this;
+			}
 
 			Builder& set_topology(vk::PrimitiveTopology topology) {
 				input_assembly_state.setTopology(topology);
@@ -225,6 +249,8 @@ namespace Vulxels::GFX {
 			}
 
 			std::vector<vk::PipelineShaderStageCreateInfo> shader_stages;
+			std::vector<vk::VertexInputBindingDescription> vertex_bindings;
+			std::vector<vk::VertexInputAttributeDescription> vertex_attributes;
 			vk::PipelineVertexInputStateCreateInfo vertex_input_state;
 			vk::PipelineInputAssemblyStateCreateInfo input_assembly_state;
 			vk::PipelineViewportStateCreateInfo viewport_state;

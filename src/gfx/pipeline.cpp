@@ -33,6 +33,8 @@ Pipeline::Builder& Pipeline::Builder::use_default() {
 }
 
 Pipeline::Pipeline(Device& device, Builder& builder) {
+	builder.vertex_input_state.setVertexBindingDescriptions(builder.vertex_bindings);
+	builder.vertex_input_state.setVertexAttributeDescriptions(builder.vertex_attributes);
 	builder.color_blend_state.setAttachments(builder.color_blend_attachments);
 	builder.dynamic_state.setDynamicStates(builder.dynamic_states);
 
