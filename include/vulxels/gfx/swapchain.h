@@ -21,6 +21,22 @@ namespace Vulxels::GFX {
 		Swapchain(const Swapchain&) = delete;
 		Swapchain& operator=(const Swapchain&) = delete;
 
+		vk::SurfaceFormatKHR format() {
+			return m_format;
+		}
+
+		vk::PresentModeKHR present_mode() {
+			return m_present_mode;
+		}
+
+		vk::Extent2D extent() {
+			return m_extent;
+		}
+
+		u32 image_count() {
+			return m_image_count;
+		}
+
 		void create(vk::Extent2D extent);
 
 	  private:
