@@ -46,6 +46,10 @@ namespace Vulxels::GFX {
 			return m_device;
 		}
 
+		vk::raii::CommandPool& command_pool() {
+			return m_command_pool;
+		}
+
 		QueueFamily& graphics_queue() {
 			return m_graphics_queue;
 		}
@@ -65,11 +69,13 @@ namespace Vulxels::GFX {
 		vk::raii::SurfaceKHR m_surface = nullptr;
 		vk::raii::PhysicalDevice m_physical_device = nullptr;
 		vk::raii::Device m_device = nullptr;
+		vk::raii::CommandPool m_command_pool = nullptr;
 		QueueFamily m_graphics_queue;
 		QueueFamily m_present_queue;
 
 		void pick_physical_device();
 		void find_queue_families();
 		void create_logical_device();
+		void create_command_pool();
 	};
 } // namespace Vulxels::GFX

@@ -21,6 +21,7 @@ Device::Device(Instance& instance, Window& window) : m_instance(instance) {
 	pick_physical_device();
 	find_queue_families();
 	create_logical_device();
+	create_command_pool();
 
 	m_graphics_queue.queue = m_device.getQueue(m_graphics_queue.index.value(), 0);
 	m_present_queue.queue = m_device.getQueue(m_present_queue.index.value(), 0);
@@ -80,6 +81,15 @@ void Device::create_logical_device() {
 			.setPEnabledExtensionNames(DEVICE_EXTENSIONS)
 			.setQueueCreateInfos(queue_create_infos)
 			.setPEnabledFeatures(&device_features)
+	);
+}
+
+void Device::create_command_pool() {
+	m_command_pool = vk::raii::CommandPool(
+		m_device,
+		vk::CommandPoolCreateInfo()
+			.setQueueFamilyIndex(m_graphics_queue.index.value())
+			.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer)
 	);
 }
 
