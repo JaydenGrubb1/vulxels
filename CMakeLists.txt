@@ -81,5 +81,6 @@ add_custom_target(
 add_custom_target(run
 	COMMAND ${PROJECT_NAME}
 	DEPENDS ${PROJECT_NAME}
+	DEPENDS shaders
 	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
