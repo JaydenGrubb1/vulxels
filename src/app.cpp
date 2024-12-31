@@ -55,6 +55,8 @@ App::App() {
 		glm::vec3 color;
 	};
 
+	m_renderer.swapchain().create_framebuffers(pass);
+
 	auto pipeline =
 		m_renderer.create_pipeline()
 			.use_default()

@@ -16,9 +16,7 @@
 namespace Vulxels::GFX {
 	class Renderer {
 	  public:
-		Renderer(Window& window) : m_window(window) {
-			m_swapchain.create(m_window.extent());
-		}
+		Renderer(Window& window) : m_window(window) {}
 		~Renderer() = default;
 
 		Renderer(const Renderer&) = delete;
@@ -48,6 +46,6 @@ namespace Vulxels::GFX {
 		Window& m_window;
 		Instance m_instance {m_window};
 		Device m_device {m_instance, m_window};
-		Swapchain m_swapchain {m_device};
+		Swapchain m_swapchain {m_device, m_window};
 	};
 } // namespace Vulxels::GFX

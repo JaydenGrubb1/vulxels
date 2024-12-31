@@ -15,7 +15,7 @@
 namespace Vulxels::GFX {
 	class Swapchain {
 	  public:
-		Swapchain(Device& device) : m_device(device) {}
+		Swapchain(Device& device, Window& window);
 		~Swapchain() = default;
 
 		Swapchain(const Swapchain&) = delete;
@@ -37,13 +37,16 @@ namespace Vulxels::GFX {
 			return m_image_count;
 		}
 
-		void create(vk::Extent2D extent);
+		void create_framebuffers(vk::raii::RenderPass& pass);
 
 	  private:
 		Device& m_device;
+		Window& m_window;
+
 		vk::raii::SwapchainKHR m_swapchain = nullptr;
 		std::vector<vk::Image> m_images;
 		std::vector<vk::raii::ImageView> m_image_views;
+		std::vector<vk::raii::Framebuffer> m_framebuffers;
 
 		vk::SurfaceFormatKHR m_format;
 		vk::PresentModeKHR m_present_mode;
