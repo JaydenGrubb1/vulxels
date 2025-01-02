@@ -114,6 +114,7 @@ void App::run() {
 
 	while (m_running) {
 		while (SDL_PollEvent(&e) != 0) {
+			m_renderer.handle_events(e);
 			if (e.type == SDL_QUIT) {
 				m_running = false;
 			}

@@ -44,6 +44,8 @@ namespace Vulxels::GFX {
 			return Pipeline::Builder(m_device);
 		}
 
+		void handle_events(SDL_Event& event);
+
 	  private:
 		Window& m_window;
 		Instance m_instance {m_window};

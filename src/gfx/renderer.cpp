@@ -71,3 +71,15 @@ void Renderer::end_frame(vk::raii::CommandBuffer* cmd) {
 	m_swapchain.present(m_render_finished[m_current_frame]);
 	m_current_frame = (m_current_frame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
+
+void Renderer::handle_events(SDL_Event& event) {
+	switch (event.type) {
+		case SDL_WINDOWEVENT:
+			switch (event.window.event) {
+				case SDL_WINDOWEVENT_RESIZED:
+					m_swapchain.recreate();
+					break;
+			}
+			break;
+	}
+}
