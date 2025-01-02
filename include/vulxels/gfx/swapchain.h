@@ -74,7 +74,9 @@ namespace Vulxels::GFX {
 		vk::Extent2D m_extent;
 		u32 m_image_count;
 		u32 m_current_image;
+		bool m_resized = false;
 
+		void recreate_impl();
 		void create_swapchain();
 		void create_image_views();
 		void create_framebuffers();
