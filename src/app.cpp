@@ -15,11 +15,14 @@
 
 using namespace Vulxels;
 
+static std::shared_ptr<vk::raii::RenderPass> s_render_pass;
+static std::shared_ptr<GFX::Pipeline> s_pipeline;
+
 App::App() {
 	auto vert = m_renderer.create_shader("simple.vert.spv");
 	auto frag = m_renderer.create_shader("simple.frag.spv");
 
-	vk::raii::RenderPass pass(
+	s_render_pass = std::make_shared<vk::raii::RenderPass>(
 		m_renderer.device().device(),
 		vk::RenderPassCreateInfo()
 			.setAttachments({vk::AttachmentDescription()
@@ -50,78 +53,75 @@ App::App() {
 			)
 	);
 
-	struct Vert {
-		glm::vec2 pos;
-		glm::vec3 color;
-	};
+	m_renderer.swapchain().set_render_pass(s_render_pass);
 
-	m_renderer.swapchain().create_framebuffers(pass);
-
-	auto pipeline =
+	s_pipeline = std::make_shared<GFX::Pipeline>(
+		m_renderer.device(),
 		m_renderer.create_pipeline()
 			.use_default()
 			.add_shader_stage(vert.module(), vk::ShaderStageFlagBits::eVertex)
 			.add_shader_stage(frag.module(), vk::ShaderStageFlagBits::eFragment)
-			.add_vertex_binding_description(0, sizeof(Vert), vk::VertexInputRate::eVertex)
-			.add_vertex_attribute_description(
-				0,
-				0,
-				vk::Format::eR32G32Sfloat,
-				offsetof(Vert, pos)
-			)
-			.add_vertex_attribute_description(
-				0,
-				1,
-				vk::Format::eR32G32B32Sfloat,
-				offsetof(Vert, color)
-			)
-			.set_render_pass(std::move(pass))
-			.build();
+			.set_render_pass(s_render_pass)
+	);
+}
+
+static void draw(GFX::Renderer& renderer) {
+	auto cmd = renderer.begin_frame();
+	if (!cmd) {
+		return;
+	}
+
+	cmd->beginRenderPass(
+		vk::RenderPassBeginInfo()
+			.setRenderPass(*s_render_pass)
+			.setFramebuffer(renderer.swapchain().framebuffer())
+			.setRenderArea({{0, 0}, renderer.swapchain().extent()})
+			.setClearValues({vk::ClearValue().setColor({0.0f, 0.0f, 0.0f, 1.0f})}),
+		vk::SubpassContents::eInline
+	);
+
+	cmd->setViewport(
+		0,
+		{vk::Viewport()
+			 .setX(0.0f)
+			 .setY(0.0f)
+			 .setWidth(static_cast<f32>(renderer.swapchain().extent().width))
+			 .setHeight(static_cast<f32>(renderer.swapchain().extent().height))
+			 .setMinDepth(0.0f)
+			 .setMaxDepth(1.0f)}
+	);
+	cmd->setScissor(
+		0,
+		{vk::Rect2D().setOffset({0, 0}).setExtent(renderer.swapchain().extent())}
+	);
+
+	cmd->bindPipeline(vk::PipelineBindPoint::eGraphics, s_pipeline->pipeline());
+	cmd->draw(3, 1, 0, 0);
+
+	cmd->endRenderPass();
+
+	renderer.end_frame(cmd);
 }
 
 App::~App() {
-	// TODO
-}
-
-static void fixed_update() {
-	// Placeholder for fixed update
-}
-
-static void render_update(float delta) {
-	// Placeholder for render update
-	(void)delta;
-}
-
-static void late_update(float delta) {
-	// Placeholder for late update
-	(void)delta;
+	m_renderer.device().wait_idle();
+	s_pipeline.reset();
+	s_render_pass.reset();
 }
 
 void App::run() {
-	auto fixed_loop = std::thread([&]() {
-		while (m_running) {
-			fixed_update();
-			std::this_thread::sleep_for(std::chrono::milliseconds(16));
-		}
-	});
-
 	SDL_Event e;
-	f32 last_time = static_cast<f32>(SDL_GetTicks());
 
 	while (m_running) {
-		f32 current_time = static_cast<f32>(SDL_GetTicks());
-		f32 delta = current_time - last_time;
-		last_time = current_time;
-
-		render_update(delta);
-		late_update(delta);
-
 		while (SDL_PollEvent(&e) != 0) {
 			if (e.type == SDL_QUIT) {
 				m_running = false;
 			}
+			if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) {
+				m_running = false;
+			}
 		}
-	}
 
-	fixed_loop.join();
+		draw(m_renderer);
+	}
 }
