@@ -12,7 +12,11 @@
 #include <vulkan/vulkan_raii.hpp>
 
 namespace Vulxels::GFX {
+#ifdef NDEBUG
+	static constexpr const std::array<const char*, 0> VALIDATION_LAYERS;
+#else
 	static constexpr const std::array VALIDATION_LAYERS = {"VK_LAYER_KHRONOS_validation"};
+#endif
 
 	class Instance {
 	  public:
