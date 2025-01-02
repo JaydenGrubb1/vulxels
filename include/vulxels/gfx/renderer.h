@@ -16,8 +16,10 @@
 namespace Vulxels::GFX {
 	class Renderer {
 	  public:
-		Renderer(Window& window) : m_window(window) {}
-		~Renderer() = default;
+		static constexpr u32 MAX_FRAMES_IN_FLIGHT = 2;
+
+		Renderer(Window& window);
+		~Renderer();
 
 		Renderer(const Renderer&) = delete;
 		Renderer& operator=(const Renderer&) = delete;
@@ -47,5 +49,16 @@ namespace Vulxels::GFX {
 		Instance m_instance {m_window};
 		Device m_device {m_instance, m_window};
 		Swapchain m_swapchain {m_device, m_window};
+
+		u32 m_current_frame = 0;
+		vk::raii::CommandBuffers m_commands = nullptr;
+		std::vector<vk::raii::Fence> m_frame_ready;
+		std::vector<vk::raii::Semaphore> m_image_available;
+		std::vector<vk::raii::Semaphore> m_render_finished;
+
+	  public:
+		// TODO: make these private
+		vk::raii::CommandBuffer* begin_frame();
+		void end_frame(vk::raii::CommandBuffer* cmd);
 	};
 } // namespace Vulxels::GFX
