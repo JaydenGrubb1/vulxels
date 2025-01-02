@@ -41,6 +41,40 @@ void Swapchain::recreate() {
 	}
 }
 
+bool Swapchain::acquire(vk::raii::Semaphore& wait) {
+	auto [res, idx] =
+		m_swapchain.acquireNextImage(std::numeric_limits<u64>::max(), *wait);
+	switch (res) {
+		case vk::Result::eSuccess:
+		case vk::Result::eSuboptimalKHR:
+			m_current_image = idx;
+			return true;
+		case vk::Result::eErrorOutOfDateKHR:
+			recreate();
+			return false;
+		default:
+			throw std::runtime_error("Failed to acquire next image");
+	}
+}
+
+bool Swapchain::present(vk::raii::Semaphore& wait) {
+	auto res =
+		m_device.present_queue().queue.presentKHR(vk::PresentInfoKHR()
+													  .setSwapchains(*m_swapchain)
+													  .setImageIndices(m_current_image)
+													  .setWaitSemaphores(*wait));
+	switch (res) {
+		case vk::Result::eSuccess:
+			return true;
+		case vk::Result::eErrorOutOfDateKHR:
+		case vk::Result::eSuboptimalKHR:
+			recreate();
+			return false;
+		default:
+			throw std::runtime_error("Failed to present image");
+	}
+}
+
 void Swapchain::create_swapchain() {
 	vk::SwapchainCreateInfoKHR create {};
 	create.surface = m_device.surface();

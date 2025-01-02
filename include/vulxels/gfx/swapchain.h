@@ -56,6 +56,8 @@ namespace Vulxels::GFX {
 
 		void set_render_pass(std::shared_ptr<vk::raii::RenderPass> pass);
 		void recreate();
+		bool acquire(vk::raii::Semaphore& wait);
+		bool present(vk::raii::Semaphore& wait);
 
 	  private:
 		Device& m_device;
