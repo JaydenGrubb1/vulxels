@@ -8,6 +8,7 @@
 
 #include <vulxels/gfx/device.h>
 
+#include <memory>
 #include <string_view>
 #include <vector>
 #include <vulkan/vulkan_raii.hpp>
@@ -237,8 +238,8 @@ namespace Vulxels::GFX {
 				return *this;
 			}
 
-			Builder& set_render_pass(vk::raii::RenderPass&& pass) {
-				render_pass = std::move(pass);
+			Builder& set_render_pass(std::shared_ptr<vk::raii::RenderPass> pass) {
+				render_pass = pass;
 				return *this;
 			}
 
@@ -263,8 +264,7 @@ namespace Vulxels::GFX {
 			vk::PipelineDynamicStateCreateInfo dynamic_state;
 			std::vector<vk::DescriptorSetLayout> descriptor_set_layouts;
 			std::vector<vk::PushConstantRange> push_constant_ranges;
-
-			vk::raii::RenderPass render_pass = nullptr;
+			std::shared_ptr<vk::raii::RenderPass> render_pass;
 
 		  private:
 			Device& m_device;
@@ -275,6 +275,14 @@ namespace Vulxels::GFX {
 
 		Pipeline(const Pipeline&) = delete;
 		Pipeline& operator=(const Pipeline&) = delete;
+
+		vk::raii::PipelineLayout& layout() {
+			return m_layout;
+		}
+
+		vk::raii::Pipeline& pipeline() {
+			return m_pipeline;
+		}
 
 	  private:
 		vk::raii::PipelineLayout m_layout = nullptr;

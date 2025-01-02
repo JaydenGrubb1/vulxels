@@ -29,7 +29,6 @@ Pipeline::Builder& Pipeline::Builder::use_default() {
 		)
 		.add_dynamic_state(vk::DynamicState::eViewport)
 		.add_dynamic_state(vk::DynamicState::eScissor);
-	// TODO: Set default values for other pipeline states
 }
 
 Pipeline::Pipeline(Device& device, Builder& builder) {
@@ -62,6 +61,6 @@ Pipeline::Pipeline(Device& device, Builder& builder) {
 			.setPColorBlendState(&builder.color_blend_state)
 			.setPDynamicState(&builder.dynamic_state)
 			.setLayout(m_layout)
-			.setRenderPass(builder.render_pass)
+			.setRenderPass(*builder.render_pass)
 	);
 }

@@ -18,9 +18,30 @@ Swapchain::Swapchain(Device& device, Window& window) :
 	auto support = m_device.query_swapchain_support();
 	choose_format(support.formats);
 	choose_present_mode(support.present_modes);
-	choose_extent(support.capabilities, m_window.extent());
 	choose_image_count(support.capabilities);
+	choose_extent(support.capabilities);
 
+	create_swapchain();
+	create_image_views();
+}
+
+void Swapchain::set_render_pass(std::shared_ptr<vk::raii::RenderPass> pass) {
+	// TODO: don't recreate framebuffers if render pass is compatible
+	m_render_pass = pass;
+	create_framebuffers();
+}
+
+void Swapchain::recreate() {
+	m_device.wait_idle();
+	auto support = m_device.query_swapchain_support();
+	if (choose_extent(support.capabilities)) {
+		create_swapchain();
+		create_image_views();
+		create_framebuffers();
+	}
+}
+
+void Swapchain::create_swapchain() {
 	vk::SwapchainCreateInfoKHR create {};
 	create.surface = m_device.surface();
 	create.minImageCount = m_image_count;
@@ -35,7 +56,11 @@ Swapchain::Swapchain(Device& device, Window& window) :
 	create.clipped = VK_TRUE;
 	create.oldSwapchain = nullptr;
 
-	// TODO: Handle old swapchain
+	if (*m_swapchain) {
+		create.oldSwapchain = *m_swapchain;
+	} else {
+		create.oldSwapchain = nullptr;
+	}
 
 	std::array queue_indices = {
 		m_device.graphics_queue().index.value(),
@@ -50,12 +75,17 @@ Swapchain::Swapchain(Device& device, Window& window) :
 		create.imageSharingMode = vk::SharingMode::eExclusive;
 	}
 
-	printf("Creating swapchain (%dx%d)\n", m_extent.width, m_extent.height);
+	auto temp = vk::raii::SwapchainKHR(m_device.device(), create);
+	m_swapchain = std::move(temp);
 
-	m_swapchain = vk::raii::SwapchainKHR(m_device.device(), create);
+	printf("Created swapchain (%dx%d)\n", m_extent.width, m_extent.height);
+}
+
+void Swapchain::create_image_views() {
 	m_images = m_swapchain.getImages();
-
+	m_image_views.clear();
 	m_image_views.reserve(m_images.size());
+
 	for (const auto& image : m_images) {
 		m_image_views.push_back(vk::raii::ImageView(
 			m_device.device(),
@@ -69,14 +99,20 @@ Swapchain::Swapchain(Device& device, Window& window) :
 	}
 }
 
-void Swapchain::create_framebuffers(vk::raii::RenderPass& pass) {
+void Swapchain::create_framebuffers() {
+	if (!m_render_pass) {
+		return;
+	}
+
+	m_framebuffers.clear();
 	m_framebuffers.reserve(m_images.size());
+
 	for (const auto& view : m_image_views) {
 		std::array attachments = {*view};
 		m_framebuffers.push_back(vk::raii::Framebuffer(
 			m_device.device(),
 			vk::FramebufferCreateInfo()
-				.setRenderPass(pass)
+				.setRenderPass(*m_render_pass)
 				.setAttachments(attachments)
 				.setWidth(m_extent.width)
 				.setHeight(m_extent.height)
@@ -106,29 +142,29 @@ void Swapchain::choose_present_mode(std::vector<vk::PresentModeKHR>& modes) {
 	}
 }
 
-void Swapchain::choose_extent(
-	vk::SurfaceCapabilitiesKHR& capabilities,
-	vk::Extent2D extent
-) {
+void Swapchain::choose_image_count(vk::SurfaceCapabilitiesKHR& capabilities) {
+	m_image_count = capabilities.minImageCount + 1;
+	if (capabilities.maxImageCount > 0 && m_image_count > capabilities.maxImageCount) {
+		m_image_count = capabilities.maxImageCount;
+	}
+}
+
+bool Swapchain::choose_extent(vk::SurfaceCapabilitiesKHR& capabilities) {
+	auto old = m_extent;
 	if (capabilities.currentExtent.width == std::numeric_limits<u32>::max()) {
+		auto window_extent = m_window.extent();
 		m_extent.width = std::clamp(
-			extent.width,
+			window_extent.width,
 			capabilities.minImageExtent.width,
 			capabilities.maxImageExtent.width
 		);
 		m_extent.height = std::clamp(
-			extent.height,
+			window_extent.height,
 			capabilities.minImageExtent.height,
 			capabilities.maxImageExtent.height
 		);
 	} else {
 		m_extent = capabilities.currentExtent;
 	}
-}
-
-void Swapchain::choose_image_count(vk::SurfaceCapabilitiesKHR& capabilities) {
-	m_image_count = capabilities.minImageCount + 1;
-	if (capabilities.maxImageCount > 0 && m_image_count > capabilities.maxImageCount) {
-		m_image_count = capabilities.maxImageCount;
-	}
+	return old != m_extent;
 }
