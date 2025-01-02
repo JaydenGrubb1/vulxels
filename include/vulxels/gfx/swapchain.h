@@ -9,6 +9,7 @@
 #include <vulxels/gfx/device.h>
 #include <vulxels/gfx/window.h>
 
+#include <limits>
 #include <memory>
 #include <vector>
 #include <vulkan/vulkan_raii.hpp>
@@ -21,6 +22,17 @@ namespace Vulxels::GFX {
 
 		Swapchain(const Swapchain&) = delete;
 		Swapchain& operator=(const Swapchain&) = delete;
+
+		vk::raii::SwapchainKHR& swapchain() {
+			return m_swapchain;
+		}
+
+		vk::raii::Framebuffer& framebuffer(u32 index = -1) {
+			if (index == std::numeric_limits<u32>::max()) {
+				index = m_current_image;
+			}
+			return m_framebuffers[index];
+		}
 
 		vk::SurfaceFormatKHR format() {
 			return m_format;
@@ -36,6 +48,10 @@ namespace Vulxels::GFX {
 
 		u32 image_count() {
 			return m_image_count;
+		}
+
+		u32 current_image() {
+			return m_current_image;
 		}
 
 		void set_render_pass(std::shared_ptr<vk::raii::RenderPass> pass);
@@ -55,6 +71,7 @@ namespace Vulxels::GFX {
 		vk::PresentModeKHR m_present_mode;
 		vk::Extent2D m_extent;
 		u32 m_image_count;
+		u32 m_current_image;
 
 		void create_swapchain();
 		void create_image_views();
