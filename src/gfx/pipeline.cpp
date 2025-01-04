@@ -17,7 +17,6 @@ Pipeline::Builder& Pipeline::Builder::use_default() {
 		.set_polygon_mode(vk::PolygonMode::eFill)
 		.set_front_face(vk::FrontFace::eCounterClockwise)
 		.set_cull_mode(vk::CullModeFlagBits::eBack)
-		.set_cull_mode(vk::CullModeFlagBits::eNone) // TODO: Remove this line
 		.set_line_width(1.0f)
 		.add_color_blend_attachment(
 			vk::PipelineColorBlendAttachmentState()
