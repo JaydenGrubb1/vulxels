@@ -31,11 +31,11 @@ void Swapchain::set_render_pass(std::shared_ptr<vk::raii::RenderPass> pass) {
 	create_framebuffers();
 }
 
-void Swapchain::recreate() {
+void Swapchain::set_resized() {
 	m_resized = true;
 }
 
-void Swapchain::recreate_impl() {
+void Swapchain::recreate() {
 	m_device.wait_idle();
 	m_resized = false;
 	auto support = m_device.query_swapchain_support();
@@ -46,16 +46,16 @@ void Swapchain::recreate_impl() {
 	}
 }
 
-bool Swapchain::acquire(vk::raii::Semaphore& wait) {
+bool Swapchain::acquire(vk::raii::Semaphore& signal) {
 	auto [res, idx] =
-		m_swapchain.acquireNextImage(std::numeric_limits<u64>::max(), *wait);
+		m_swapchain.acquireNextImage(std::numeric_limits<u64>::max(), *signal);
 	switch (res) {
 		case vk::Result::eSuccess:
 		case vk::Result::eSuboptimalKHR:
 			m_current_image = idx;
 			return true;
 		case vk::Result::eErrorOutOfDateKHR:
-			recreate_impl();
+			recreate();
 			return false;
 		default:
 			throw std::runtime_error("Failed to acquire next image");
@@ -76,7 +76,7 @@ bool Swapchain::present(vk::raii::Semaphore& wait) {
 			return true;
 		case vk::Result::eErrorOutOfDateKHR:
 		case vk::Result::eSuboptimalKHR:
-			recreate_impl();
+			recreate();
 			return false;
 		default:
 			throw std::runtime_error("Failed to present image");

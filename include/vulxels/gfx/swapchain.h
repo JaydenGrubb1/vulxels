@@ -55,8 +55,8 @@ namespace Vulxels::GFX {
 		}
 
 		void set_render_pass(std::shared_ptr<vk::raii::RenderPass> pass);
-		void recreate();
-		bool acquire(vk::raii::Semaphore& wait);
+		void set_resized();
+		bool acquire(vk::raii::Semaphore& signal);
 		bool present(vk::raii::Semaphore& wait);
 
 	  private:
@@ -76,7 +76,7 @@ namespace Vulxels::GFX {
 		u32 m_current_image;
 		bool m_resized = false;
 
-		void recreate_impl();
+		void recreate();
 		void create_swapchain();
 		void create_image_views();
 		void create_framebuffers();

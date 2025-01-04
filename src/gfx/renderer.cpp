@@ -77,7 +77,7 @@ void Renderer::handle_events(SDL_Event& event) {
 		case SDL_WINDOWEVENT:
 			switch (event.window.event) {
 				case SDL_WINDOWEVENT_RESIZED:
-					m_swapchain.recreate();
+					m_swapchain.set_resized();
 					break;
 			}
 			break;
