@@ -47,7 +47,7 @@ namespace Vulxels::GFX {
 		}
 
 		vk::raii::CommandPool& command_pool() {
-			return m_command_pool;
+			return m_primary_pool;
 		}
 
 		QueueFamily& graphics_queue() {
@@ -63,13 +63,16 @@ namespace Vulxels::GFX {
 		}
 
 		SwapchainSupportDetails query_swapchain_support() const;
+		vk::raii::CommandBuffer* begin_one_time_command();
+		void end_one_time_command(vk::raii::CommandBuffer* cmd);
 
 	  private:
 		Instance& m_instance;
 		vk::raii::SurfaceKHR m_surface = nullptr;
 		vk::raii::PhysicalDevice m_physical_device = nullptr;
 		vk::raii::Device m_device = nullptr;
-		vk::raii::CommandPool m_command_pool = nullptr;
+		vk::raii::CommandPool m_primary_pool = nullptr;
+		vk::raii::CommandPool m_secondary_pool = nullptr;
 		QueueFamily m_graphics_queue;
 		QueueFamily m_present_queue;
 

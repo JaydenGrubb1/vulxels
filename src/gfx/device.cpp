@@ -27,6 +27,28 @@ Device::Device(Instance& instance, Window& window) : m_instance(instance) {
 	m_present_queue.queue = m_device.getQueue(m_present_queue.index.value(), 0);
 }
 
+vk::raii::CommandBuffer* Device::begin_one_time_command() {
+	vk::raii::CommandBuffers cmds(
+		m_device,
+		vk::CommandBufferAllocateInfo()
+			.setCommandPool(m_secondary_pool)
+			.setLevel(vk::CommandBufferLevel::ePrimary)
+			.setCommandBufferCount(1)
+	);
+	auto cmd = new vk::raii::CommandBuffer(std::move(cmds.front()));
+	cmd->begin(vk::CommandBufferBeginInfo().setFlags(
+		vk::CommandBufferUsageFlagBits::eOneTimeSubmit
+	));
+	return cmd;
+}
+
+void Device::end_one_time_command(vk::raii::CommandBuffer* cmd) {
+	cmd->end();
+	m_graphics_queue.queue.submit(vk::SubmitInfo().setCommandBuffers({**cmd}));
+	m_graphics_queue.queue.waitIdle();
+	delete cmd;
+}
+
 void Device::pick_physical_device() {
 	m_physical_device = m_instance.instance().enumeratePhysicalDevices().front();
 	// TODO: Select the best physical device
@@ -85,11 +107,20 @@ void Device::create_logical_device() {
 }
 
 void Device::create_command_pool() {
-	m_command_pool = vk::raii::CommandPool(
+	m_primary_pool = vk::raii::CommandPool(
 		m_device,
 		vk::CommandPoolCreateInfo()
 			.setQueueFamilyIndex(m_graphics_queue.index.value())
 			.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer)
+	);
+	m_secondary_pool = vk::raii::CommandPool(
+		m_device,
+		vk::CommandPoolCreateInfo()
+			.setQueueFamilyIndex(m_graphics_queue.index.value())
+			.setFlags(
+				vk::CommandPoolCreateFlagBits::eResetCommandBuffer
+				| vk::CommandPoolCreateFlagBits::eTransient
+			)
 	);
 }
 
