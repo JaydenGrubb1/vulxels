@@ -62,6 +62,10 @@ namespace Vulxels::GFX {
 		vk::BufferUsageFlags m_usage;
 		vk::MemoryPropertyFlags m_properties;
 
+		Buffer* m_staging = nullptr;
+		vk::DeviceSize m_staging_size = 0;
+		vk::DeviceSize m_staging_offset = 0;
+
 		u32 find_memory_type(u32 type_filter, vk::MemoryPropertyFlags properties);
 	};
 } // namespace Vulxels::GFX

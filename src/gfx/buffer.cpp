@@ -20,17 +20,21 @@ Buffer::Buffer(
 	m_size(size),
 	m_usage(usage),
 	m_properties(properties) {
+	if (!(m_properties & vk::MemoryPropertyFlagBits::eHostVisible)) {
+		m_usage |= vk::BufferUsageFlagBits::eTransferDst;
+	}
+
 	m_buffer = vk::raii::Buffer(
 		m_device.device(),
 		vk::BufferCreateInfo()
-			.setSize(size)
-			.setUsage(usage)
+			.setSize(m_size)
+			.setUsage(m_usage)
 			.setSharingMode(vk::SharingMode::eExclusive)
 			.setFlags(vk::BufferCreateFlagBits())
 	);
 
 	auto requirements = m_buffer.getMemoryRequirements();
-	u32 memory_type = find_memory_type(requirements.memoryTypeBits, properties);
+	u32 memory_type = find_memory_type(requirements.memoryTypeBits, m_properties);
 
 	m_memory = vk::raii::DeviceMemory(
 		m_device.device(),
@@ -43,11 +47,37 @@ Buffer::Buffer(
 }
 
 void* Buffer::map(vk::DeviceSize size, vk::DeviceSize offset) {
-	return m_memory.mapMemory(offset, size);
+	if (!(m_properties & vk::MemoryPropertyFlagBits::eHostVisible)) {
+		m_staging = new Buffer(
+			m_device,
+			size,
+			vk::BufferUsageFlagBits::eTransferSrc,
+			vk::MemoryPropertyFlagBits::eHostVisible
+				| vk::MemoryPropertyFlagBits::eHostCoherent
+		);
+		m_staging_size = size;
+		m_staging_offset = offset;
+		return m_staging->map();
+	} else {
+		return m_memory.mapMemory(offset, size);
+	}
 }
 
 void Buffer::unmap() {
-	m_memory.unmapMemory();
+	if (m_staging) {
+		m_staging->unmap();
+		auto cmd = m_device.begin_one_time_command();
+		cmd->copyBuffer(
+			*m_staging->m_buffer,
+			m_buffer,
+			vk::BufferCopy().setSize(m_staging_size).setDstOffset(m_staging_offset)
+		);
+		m_device.end_one_time_command(cmd);
+		delete m_staging;
+		m_staging = nullptr;
+	} else {
+		m_memory.unmapMemory();
+	}
 }
 
 void Buffer::flush(vk::DeviceSize size, vk::DeviceSize offset) {
