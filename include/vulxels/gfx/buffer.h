@@ -9,6 +9,8 @@
 #include <vulxels/gfx/device.h>
 #include <vulxels/types.h>
 
+#include <iterator>
+#include <ranges>
 #include <vulkan/vulkan_raii.hpp>
 
 namespace Vulxels::GFX {
@@ -27,6 +29,28 @@ namespace Vulxels::GFX {
 
 		vk::raii::Buffer& buffer() {
 			return m_buffer;
+		}
+
+		void* map(vk::DeviceSize size = VK_WHOLE_SIZE, vk::DeviceSize offset = 0);
+		void unmap();
+		void flush(vk::DeviceSize size = VK_WHOLE_SIZE, vk::DeviceSize offset = 0);
+		void invalidate(vk::DeviceSize size = VK_WHOLE_SIZE, vk::DeviceSize offset = 0);
+		void write(void* data, vk::DeviceSize size, vk::DeviceSize offset = 0);
+
+		template<typename Iter>
+			requires std::contiguous_iterator<Iter>
+		void write(Iter begin, Iter end, vk::DeviceSize offset = 0) {
+			write(
+				std::addressof(*begin),
+				std::distance(begin, end) * sizeof(*begin),
+				offset
+			);
+		}
+
+		template<typename R>
+			requires std::ranges::contiguous_range<R>
+		void write(R&& range, vk::DeviceSize offset = 0) {
+			write(std::ranges::begin(range), std::ranges::end(range), offset);
 		}
 
 	  private:

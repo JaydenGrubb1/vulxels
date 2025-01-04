@@ -6,6 +6,8 @@
 
 #include <vulxels/gfx/buffer.h>
 
+#include <cstring>
+
 using namespace Vulxels::GFX;
 
 Buffer::Buffer(
@@ -38,6 +40,32 @@ Buffer::Buffer(
 	);
 
 	m_buffer.bindMemory(*m_memory, 0);
+}
+
+void* Buffer::map(vk::DeviceSize size, vk::DeviceSize offset) {
+	return m_memory.mapMemory(offset, size);
+}
+
+void Buffer::unmap() {
+	m_memory.unmapMemory();
+}
+
+void Buffer::flush(vk::DeviceSize size, vk::DeviceSize offset) {
+	m_device.device().flushMappedMemoryRanges(
+		{vk::MappedMemoryRange().setMemory(*m_memory).setSize(size).setOffset(offset)}
+	);
+}
+
+void Buffer::invalidate(vk::DeviceSize size, vk::DeviceSize offset) {
+	m_device.device().invalidateMappedMemoryRanges(
+		{vk::MappedMemoryRange().setMemory(*m_memory).setSize(size).setOffset(offset)}
+	);
+}
+
+void Buffer::write(void* data, vk::DeviceSize size, vk::DeviceSize offset) {
+	auto ptr = map(size, offset);
+	std::memcpy(ptr, data, size);
+	unmap();
 }
 
 u32 Buffer::find_memory_type(u32 type_filter, vk::MemoryPropertyFlags properties) {
