@@ -40,11 +40,7 @@ Renderer::~Renderer() {
 }
 
 vk::raii::CommandBuffer* Renderer::begin_frame() {
-	(void)m_device.device().waitForFences(
-		{*m_frame_ready[m_current_frame]},
-		VK_TRUE,
-		std::numeric_limits<u64>::max()
-	);
+	m_device.wait_for_fence(m_frame_ready[m_current_frame]);
 	if (!m_swapchain.acquire(m_image_available[m_current_frame])) {
 		return nullptr;
 	}

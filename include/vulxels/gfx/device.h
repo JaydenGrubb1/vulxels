@@ -62,6 +62,17 @@ namespace Vulxels::GFX {
 			m_device.waitIdle();
 		}
 
+		bool wait_for_fence(
+			vk::raii::Fence& fence,
+			u64 timeout = std::numeric_limits<u64>::max()
+		) {
+			auto res = m_device.waitForFences({*fence}, VK_TRUE, timeout);
+			if (res != vk::Result::eSuccess && res != vk::Result::eTimeout) {
+				throw std::runtime_error("Failed to wait for fence");
+			}
+			return res == vk::Result::eTimeout;
+		}
+
 		SwapchainSupportDetails query_swapchain_support() const;
 		vk::raii::CommandBuffer* begin_one_time_command();
 		void end_one_time_command(vk::raii::CommandBuffer* cmd);
