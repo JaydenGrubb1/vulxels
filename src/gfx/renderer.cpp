@@ -50,7 +50,6 @@ vk::raii::CommandBuffer* Renderer::begin_frame() {
 	}
 	m_device.device().resetFences({*m_frame_ready[m_current_frame]});
 	auto& cmd = m_commands[m_current_frame];
-	cmd.reset();
 	cmd.begin(vk::CommandBufferBeginInfo());
 	return &cmd;
 }
