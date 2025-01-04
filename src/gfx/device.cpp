@@ -46,8 +46,8 @@ vk::raii::CommandBuffer* Device::begin_one_time_command() {
 
 void Device::end_one_time_command(vk::raii::CommandBuffer* cmd) {
 	cmd->end();
-	m_graphics_queue.queue().submit(vk::SubmitInfo().setCommandBuffers({**cmd}));
-	m_graphics_queue.queue().waitIdle();
+	m_graphics_queue.submit(vk::SubmitInfo().setCommandBuffers({**cmd}));
+	m_graphics_queue.wait_idle();
 	delete cmd;
 }
 

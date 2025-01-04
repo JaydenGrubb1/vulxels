@@ -63,11 +63,10 @@ bool Swapchain::acquire(vk::raii::Semaphore& signal) {
 }
 
 bool Swapchain::present(vk::raii::Semaphore& wait) {
-	auto res =
-		m_device.present_queue().queue().presentKHR(vk::PresentInfoKHR()
-														.setSwapchains(*m_swapchain)
-														.setImageIndices(m_current_image)
-														.setWaitSemaphores(*wait));
+	auto res = m_device.present_queue().present(vk::PresentInfoKHR()
+													.setSwapchains(*m_swapchain)
+													.setImageIndices(m_current_image)
+													.setWaitSemaphores(*wait));
 	if (m_resized) {
 		res = vk::Result::eErrorOutOfDateKHR;
 	}

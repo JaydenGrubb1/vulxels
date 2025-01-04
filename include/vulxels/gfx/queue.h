@@ -36,6 +36,18 @@ namespace Vulxels::GFX {
 			return m_index;
 		}
 
+		void wait_idle() {
+			m_queue.waitIdle();
+		}
+
+		void submit(const vk::SubmitInfo& info, vk::Fence fence = {}) {
+			m_queue.submit(info, fence);
+		}
+
+		vk::Result present(const vk::PresentInfoKHR& info) {
+			return m_queue.presentKHR(info);
+		}
+
 	  private:
 		vk::raii::Queue m_queue = nullptr;
 		u32 m_index;

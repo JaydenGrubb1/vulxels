@@ -55,12 +55,12 @@ void Renderer::end_frame(vk::raii::CommandBuffer* cmd) {
 	vk::PipelineStageFlags wait_stages[] = {
 		vk::PipelineStageFlagBits::eColorAttachmentOutput
 	};
-	m_device.graphics_queue().queue().submit(
-		{vk::SubmitInfo()
-			 .setCommandBuffers(**cmd)
-			 .setWaitSemaphores(*m_image_available[m_current_frame])
-			 .setWaitDstStageMask(wait_stages)
-			 .setSignalSemaphores(*m_render_finished[m_current_frame])},
+	m_device.graphics_queue().submit(
+		vk::SubmitInfo()
+			.setCommandBuffers(**cmd)
+			.setWaitSemaphores(*m_image_available[m_current_frame])
+			.setWaitDstStageMask(wait_stages)
+			.setSignalSemaphores(*m_render_finished[m_current_frame]),
 		*m_frame_ready[m_current_frame]
 	);
 	m_swapchain.present(m_render_finished[m_current_frame]);
