@@ -64,10 +64,10 @@ bool Swapchain::acquire(vk::raii::Semaphore& signal) {
 
 bool Swapchain::present(vk::raii::Semaphore& wait) {
 	auto res =
-		m_device.present_queue().queue.presentKHR(vk::PresentInfoKHR()
-													  .setSwapchains(*m_swapchain)
-													  .setImageIndices(m_current_image)
-													  .setWaitSemaphores(*wait));
+		m_device.present_queue().queue().presentKHR(vk::PresentInfoKHR()
+														.setSwapchains(*m_swapchain)
+														.setImageIndices(m_current_image)
+														.setWaitSemaphores(*wait));
 	if (m_resized) {
 		res = vk::Result::eErrorOutOfDateKHR;
 	}
@@ -105,11 +105,11 @@ void Swapchain::create_swapchain() {
 	}
 
 	std::array queue_indices = {
-		m_device.graphics_queue().index.value(),
-		m_device.present_queue().index.value()
+		m_device.graphics_queue().index(),
+		m_device.present_queue().index()
 	};
 
-	if (m_device.graphics_queue().index != m_device.present_queue().index) {
+	if (m_device.graphics_queue().index() != m_device.present_queue().index()) {
 		create.imageSharingMode = vk::SharingMode::eConcurrent;
 		create.queueFamilyIndexCount = queue_indices.size();
 		create.pQueueFamilyIndices = queue_indices.data();

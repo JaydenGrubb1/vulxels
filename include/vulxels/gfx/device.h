@@ -7,19 +7,16 @@
 #pragma once
 
 #include <vulxels/gfx/instance.h>
+#include <vulxels/gfx/queue.h>
 #include <vulxels/gfx/window.h>
 #include <vulxels/types.h>
 
 #include <cstddef>
 #include <optional>
+#include <set>
 #include <vulkan/vulkan_raii.hpp>
 
 namespace Vulxels::GFX {
-	struct QueueFamily {
-		vk::raii::Queue queue = nullptr;
-		std::optional<u32> index;
-	};
-
 	struct SwapchainSupportDetails {
 		vk::SurfaceCapabilitiesKHR capabilities;
 		std::vector<vk::SurfaceFormatKHR> formats;
@@ -50,11 +47,11 @@ namespace Vulxels::GFX {
 			return m_primary_pool;
 		}
 
-		QueueFamily& graphics_queue() {
+		Queue& graphics_queue() {
 			return m_graphics_queue;
 		}
 
-		QueueFamily& present_queue() {
+		Queue& present_queue() {
 			return m_present_queue;
 		}
 
@@ -84,12 +81,11 @@ namespace Vulxels::GFX {
 		vk::raii::Device m_device = nullptr;
 		vk::raii::CommandPool m_primary_pool = nullptr;
 		vk::raii::CommandPool m_secondary_pool = nullptr;
-		QueueFamily m_graphics_queue;
-		QueueFamily m_present_queue;
+		Queue m_graphics_queue;
+		Queue m_present_queue;
 
 		void pick_physical_device();
-		void find_queue_families();
-		void create_logical_device();
+		void create_logical_device(std::set<u32> queues);
 		void create_command_pool();
 	};
 } // namespace Vulxels::GFX

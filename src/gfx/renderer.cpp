@@ -55,7 +55,7 @@ void Renderer::end_frame(vk::raii::CommandBuffer* cmd) {
 	vk::PipelineStageFlags wait_stages[] = {
 		vk::PipelineStageFlagBits::eColorAttachmentOutput
 	};
-	m_device.graphics_queue().queue.submit(
+	m_device.graphics_queue().queue().submit(
 		{vk::SubmitInfo()
 			 .setCommandBuffers(**cmd)
 			 .setWaitSemaphores(*m_image_available[m_current_frame])
