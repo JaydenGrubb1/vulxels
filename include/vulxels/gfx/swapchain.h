@@ -46,6 +46,10 @@ namespace Vulxels::GFX {
 			return m_extent;
 		}
 
+		float aspect() {
+			return static_cast<float>(m_extent.width) / m_extent.height;
+		}
+
 		u32 image_count() {
 			return m_image_count;
 		}
