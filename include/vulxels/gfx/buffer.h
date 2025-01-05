@@ -26,6 +26,8 @@ namespace Vulxels::GFX {
 
 		Buffer(const Buffer&) = delete;
 		Buffer& operator=(const Buffer&) = delete;
+		Buffer(Buffer&&) = default;
+		Buffer& operator=(Buffer&&) = default;
 
 		vk::raii::Buffer& buffer() {
 			return m_buffer;
