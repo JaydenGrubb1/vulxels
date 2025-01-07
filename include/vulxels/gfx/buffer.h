@@ -10,6 +10,7 @@
 #include <vulxels/types.h>
 
 #include <iterator>
+#include <memory>
 #include <ranges>
 #include <vulkan/vulkan_raii.hpp>
 
@@ -64,7 +65,7 @@ namespace Vulxels::GFX {
 		vk::BufferUsageFlags m_usage;
 		vk::MemoryPropertyFlags m_properties;
 
-		Buffer* m_staging = nullptr;
+		std::unique_ptr<Buffer> m_staging = nullptr;
 		vk::DeviceSize m_staging_size = 0;
 		vk::DeviceSize m_staging_offset = 0;
 
