@@ -17,6 +17,7 @@ set(CXX_SOURCE
 	src/app.cpp
 	src/main.cpp
 	src/gfx/buffer.cpp
+	src/gfx/descriptors.cpp
 	src/gfx/device.cpp
 	src/gfx/instance.cpp
 	src/gfx/pipeline.cpp
