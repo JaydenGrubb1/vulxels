@@ -51,7 +51,7 @@ find_package(EnTT REQUIRED)
 include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/include
 	${CMAKE_CURRENT_SOURCE_DIR}/vendor/imgui
-	${Vulkan_INCLUDE}
+	${Vulkan_INCLUDE_DIRS}
 	${SDL2_INCLUDE_DIRS}
 	${GLM_INCLUDE_DIRS}
 	${EnTT_INCLUDE_DIRS}
