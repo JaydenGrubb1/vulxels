@@ -165,7 +165,7 @@ void Swapchain::create_framebuffers() {
 void Swapchain::choose_format(std::vector<vk::SurfaceFormatKHR>& formats) {
 	m_format = formats.front();
 	for (const auto& format : formats) {
-		if (format.format == vk::Format::eB8G8R8A8Srgb
+		if (format.format == vk::Format::eB8G8R8A8Unorm
 			&& format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear) {
 			m_format = format;
 			break;

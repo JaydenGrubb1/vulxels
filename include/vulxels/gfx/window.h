@@ -26,6 +26,10 @@ namespace Vulxels::GFX {
 		vk::raii::SurfaceKHR create_surface(vk::raii::Instance& instance);
 		vk::Extent2D extent() const;
 
+		SDL_Window* window() {
+			return m_window;
+		}
+
 	  private:
 		SDL_Window* m_window = nullptr;
 	};

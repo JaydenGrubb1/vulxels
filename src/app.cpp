@@ -4,8 +4,12 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+#include <backends/imgui_impl_sdl2.h>
+#include <backends/imgui_impl_vulkan.h>
+#include <imgui.h>
 #include <vulxels/app.h>
 #include <vulxels/gfx/buffer.h>
+#include <vulxels/gfx/descriptors.h>
 #include <vulxels/types.h>
 #include <vulxels/version.h>
 
@@ -26,6 +30,7 @@ static std::shared_ptr<vk::raii::RenderPass> s_render_pass;
 static std::shared_ptr<GFX::Pipeline> s_pipeline;
 static std::shared_ptr<GFX::Buffer> s_vertex_buffer;
 static std::shared_ptr<GFX::Buffer> s_index_buffer;
+static std::shared_ptr<GFX::DescriptorPool> s_imgui_pool;
 
 static std::vector<Vertex> s_vertices = {
 	{{-1.0f, -1.0f}, {1.0f, 0.0f, 0.0f}},
@@ -34,6 +39,14 @@ static std::vector<Vertex> s_vertices = {
 	{{1.0f, -1.0f}, {1.0f, 1.0f, 1.0f}}
 };
 static std::vector<u32> s_indices = {0, 1, 2, 2, 3, 0};
+
+static void check_vk_result(VkResult err) {
+	if (err == 0)
+		return;
+	fprintf(stderr, "[vulkan] Error: VkResult = %d\n", err);
+	if (err < 0)
+		abort();
+}
 
 App::App() {
 	auto vert = m_renderer.create_shader("simple.vert.spv");
@@ -111,6 +124,48 @@ App::App() {
 
 	s_vertex_buffer->write(s_vertices);
 	s_index_buffer->write(s_indices);
+
+	s_imgui_pool = std::make_shared<GFX::DescriptorPool>(m_renderer.device());
+	s_imgui_pool->set_max_sets(1000);
+	s_imgui_pool->add_pool_size(vk::DescriptorType::eSampler, 1000);
+	s_imgui_pool->add_pool_size(vk::DescriptorType::eCombinedImageSampler, 1000);
+	s_imgui_pool->add_pool_size(vk::DescriptorType::eSampledImage, 1000);
+	s_imgui_pool->add_pool_size(vk::DescriptorType::eStorageImage, 1000);
+	s_imgui_pool->add_pool_size(vk::DescriptorType::eUniformTexelBuffer, 1000);
+	s_imgui_pool->add_pool_size(vk::DescriptorType::eStorageTexelBuffer, 1000);
+	s_imgui_pool->add_pool_size(vk::DescriptorType::eUniformBuffer, 1000);
+	s_imgui_pool->add_pool_size(vk::DescriptorType::eStorageBuffer, 1000);
+	s_imgui_pool->add_pool_size(vk::DescriptorType::eUniformBufferDynamic, 1000);
+	s_imgui_pool->add_pool_size(vk::DescriptorType::eStorageBufferDynamic, 1000);
+	s_imgui_pool->add_pool_size(vk::DescriptorType::eInputAttachment, 1000);
+	s_imgui_pool->create();
+
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
+	ImGui_ImplSDL2_InitForVulkan(m_window.window());
+	ImGui_ImplVulkan_InitInfo init_info = {};
+	init_info.Instance = *m_renderer.instance().instance();
+	init_info.PhysicalDevice = *m_renderer.device().physical_device();
+	init_info.Device = *m_renderer.device().device();
+	init_info.QueueFamily = m_renderer.device().graphics_queue().index();
+	init_info.Queue = *m_renderer.device().graphics_queue().queue();
+	init_info.DescriptorPool = *s_imgui_pool->pool();
+	init_info.Subpass = 0;
+	init_info.MinImageCount = 2;
+	init_info.ImageCount = m_renderer.swapchain().image_count();
+	init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+	init_info.RenderPass = **s_render_pass;
+	init_info.CheckVkResultFn = check_vk_result;
+	ImGui_ImplVulkan_Init(&init_info);
+}
+
+static void draw_gui() {
+	ImGui::ShowDemoWindow();
 }
 
 static void draw(GFX::Renderer& renderer) {
@@ -118,6 +173,12 @@ static void draw(GFX::Renderer& renderer) {
 	if (!cmd) {
 		return;
 	}
+
+	ImGui_ImplVulkan_NewFrame();
+	ImGui_ImplSDL2_NewFrame();
+	ImGui::NewFrame();
+
+	draw_gui();
 
 	cmd->beginRenderPass(
 		vk::RenderPassBeginInfo()
@@ -148,13 +209,21 @@ static void draw(GFX::Renderer& renderer) {
 	cmd->bindPipeline(vk::PipelineBindPoint::eGraphics, s_pipeline->pipeline());
 	cmd->drawIndexed(s_indices.size(), 1, 0, 0, 0);
 
-	cmd->endRenderPass();
+	ImGui::Render();
+	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), **cmd);
 
+	cmd->endRenderPass();
 	renderer.end_frame(cmd);
 }
 
 App::~App() {
 	m_renderer.device().wait_idle();
+
+	ImGui_ImplVulkan_Shutdown();
+	ImGui_ImplSDL2_Shutdown();
+	ImGui::DestroyContext();
+
+	s_imgui_pool.reset();
 	s_index_buffer.reset();
 	s_vertex_buffer.reset();
 	s_pipeline.reset();
@@ -166,6 +235,7 @@ void App::run() {
 
 	while (m_running) {
 		while (SDL_PollEvent(&e) != 0) {
+			ImGui_ImplSDL2_ProcessEvent(&e);
 			m_renderer.handle_events(e);
 			if (e.type == SDL_QUIT) {
 				m_running = false;

@@ -10,7 +10,7 @@ add_compile_options(
 	-Wall
 	-Wextra
 	-Wpedantic
-	-Wold-style-cast
+	# -Wold-style-cast
 )
 
 set(CXX_SOURCE
@@ -26,6 +26,14 @@ set(CXX_SOURCE
 	src/gfx/shader.cpp
 	src/gfx/swapchain.cpp
 	src/gfx/window.cpp
+
+	vendor/imgui/imgui.cpp
+	vendor/imgui/imgui_draw.cpp
+	vendor/imgui/imgui_widgets.cpp
+	vendor/imgui/imgui_tables.cpp
+	vendor/imgui/imgui_demo.cpp
+	vendor/imgui/backends/imgui_impl_sdl2.cpp
+	vendor/imgui/backends/imgui_impl_vulkan.cpp
 )
 
 set(SHADER_SOURCE
@@ -42,6 +50,7 @@ find_package(EnTT REQUIRED)
 
 include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/include
+	${CMAKE_CURRENT_SOURCE_DIR}/vendor/imgui
 	${Vulkan_INCLUDE}
 	${SDL2_INCLUDE_DIRS}
 	${GLM_INCLUDE_DIRS}
