@@ -165,7 +165,17 @@ App::App() {
 }
 
 static void draw_gui() {
-	ImGui::ShowDemoWindow();
+	ImGuiIO& io = ImGui::GetIO();
+	if (ImGui::Begin("Statistics")) {
+		ImGui::Text(
+			"Vulxels %d.%d.%d",
+			VULXELS_VERSION_MAJOR,
+			VULXELS_VERSION_MINOR,
+			VULXELS_VERSION_PATCH
+		);
+		ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+	}
+	ImGui::End();
 }
 
 static void draw(GFX::Renderer& renderer) {
