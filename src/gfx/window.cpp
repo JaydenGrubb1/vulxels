@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <SDL2/SDL_vulkan.h>
+#include <SDL3/SDL_vulkan.h>
 #include <vulxels/gfx/window.h>
 #include <vulxels/types.h>
 
@@ -17,8 +17,6 @@ Window::Window(std::string_view title, int width, int height) {
 
 	m_window = SDL_CreateWindow(
 		title.data(),
-		SDL_WINDOWPOS_CENTERED,
-		SDL_WINDOWPOS_CENTERED,
 		width,
 		height,
 		SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE
@@ -35,15 +33,13 @@ Window::~Window() {
 
 std::vector<const char*> Window::get_required_extensions() {
 	u32 count;
-	SDL_Vulkan_GetInstanceExtensions(m_window, &count, nullptr);
-	std::vector<const char*> extensions(count);
-	SDL_Vulkan_GetInstanceExtensions(m_window, &count, extensions.data());
-	return extensions;
+	auto extensions = SDL_Vulkan_GetInstanceExtensions(&count);
+	return {extensions, extensions + count};
 }
 
 vk::raii::SurfaceKHR Window::create_surface(vk::raii::Instance& instance) {
 	VkSurfaceKHR surface;
-	if (!SDL_Vulkan_CreateSurface(m_window, *instance, &surface)) {
+	if (!SDL_Vulkan_CreateSurface(m_window, *instance, nullptr, &surface)) {
 		throw std::runtime_error("Failed to create Vulkan surface");
 	}
 	return vk::raii::SurfaceKHR(instance, surface);
@@ -51,6 +47,6 @@ vk::raii::SurfaceKHR Window::create_surface(vk::raii::Instance& instance) {
 
 vk::Extent2D Window::extent() const {
 	int width, height;
-	SDL_Vulkan_GetDrawableSize(m_window, &width, &height);
+	SDL_GetWindowSizeInPixels(m_window, &width, &height);
 	return vk::Extent2D(width, height);
 }

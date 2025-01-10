@@ -69,12 +69,8 @@ void Renderer::end_frame(vk::raii::CommandBuffer* cmd) {
 
 void Renderer::handle_events(SDL_Event& event) {
 	switch (event.type) {
-		case SDL_WINDOWEVENT:
-			switch (event.window.event) {
-				case SDL_WINDOWEVENT_RESIZED:
-					m_swapchain.set_resized();
-					break;
-			}
+		case SDL_EVENT_WINDOW_RESIZED:
+			m_swapchain.set_resized();
 			break;
 	}
 }

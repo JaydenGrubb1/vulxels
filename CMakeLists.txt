@@ -32,7 +32,7 @@ set(CXX_SOURCE
 	vendor/imgui/imgui_widgets.cpp
 	vendor/imgui/imgui_tables.cpp
 	vendor/imgui/imgui_demo.cpp
-	vendor/imgui/backends/imgui_impl_sdl2.cpp
+	vendor/imgui/backends/imgui_impl_sdl3.cpp
 	vendor/imgui/backends/imgui_impl_vulkan.cpp
 )
 
@@ -44,7 +44,7 @@ set(SHADER_SOURCE
 add_executable(${PROJECT_NAME} ${CXX_SOURCE})
 
 find_package(Vulkan REQUIRED)
-find_package(SDL2 REQUIRED)
+find_package(SDL3 REQUIRED)
 find_package(glm REQUIRED)
 find_package(EnTT REQUIRED)
 
@@ -52,7 +52,7 @@ include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/include
 	${CMAKE_CURRENT_SOURCE_DIR}/vendor/imgui
 	${Vulkan_INCLUDE_DIRS}
-	${SDL2_INCLUDE_DIRS}
+	${SDL3_INCLUDE_DIRS}
 	${GLM_INCLUDE_DIRS}
 	${EnTT_INCLUDE_DIRS}
 )
@@ -60,7 +60,7 @@ include_directories(
 target_link_libraries(
 	${PROJECT_NAME}
 	${Vulkan_LIBRARIES}
-	${SDL2_LIBRARIES}
+	${SDL3_LIBRARIES}
 	${GLM_LIBRARIES}
 	${EnTT_LIBRARIES}
 )
