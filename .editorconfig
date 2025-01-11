@@ -13,3 +13,6 @@ insert_final_newline = true
 
 [*.{c,cpp,h,hpp}]
 clang-format-style = file
+
+[*.{glsl,vert,vsh,tesc,tese,geom,gsh,frag,fsh,comp}]
+clang-format-style = file
