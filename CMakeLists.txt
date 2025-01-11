@@ -6,11 +6,54 @@ enable_language(CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+find_package(Vulkan REQUIRED)
+include(FetchContent)
+
+FetchContent_Declare(
+	SDL3
+	GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+	GIT_TAG 22422f7748d5128135995ed34c8f8012861c7332 # preview-3.1.8
+	FIND_PACKAGE_ARGS NAMES SDL3
+)
+FetchContent_MakeAvailable(SDL3)
+
+FetchContent_Declare(
+	glm
+	GIT_REPOSITORY https://github.com/g-truc/glm.git
+	GIT_TAG 0af55ccecd98d4e5a8d1fad7de25ba429d60e863 # 1.0.1
+	FIND_PACKAGE_ARGS NAMES glm
+)
+FetchContent_MakeAvailable(glm)
+
+FetchContent_Declare(
+	EnTT
+	GIT_REPOSITORY https://github.com/skypjack/entt.git
+	GIT_TAG 4a2d1a8541228a90e02a873dba6a980506c42c03 # v3.14.0
+	FIND_PACKAGE_ARGS NAMES EnTT
+)
+FetchContent_MakeAvailable(EnTT)
+
+FetchContent_Declare(
+	imgui
+	GIT_REPOSITORY https://github.com/ocornut/imgui.git
+	GIT_TAG 947aa9c9722bd6ff740dd757da609ff41f4d3ba3 # v1.91.6-docking
+)
+FetchContent_MakeAvailable(imgui)
+
+add_library(
+	imgui
+	${imgui_SOURCE_DIR}/imgui.cpp
+	${imgui_SOURCE_DIR}/imgui_draw.cpp
+	${imgui_SOURCE_DIR}/imgui_widgets.cpp
+	${imgui_SOURCE_DIR}/imgui_tables.cpp
+	${imgui_SOURCE_DIR}/backends/imgui_impl_sdl3.cpp
+	${imgui_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp
+)
+
 add_compile_options(
 	-Wall
 	-Wextra
 	-Wpedantic
-	# -Wold-style-cast
 )
 
 set(CXX_SOURCE
@@ -26,14 +69,6 @@ set(CXX_SOURCE
 	src/gfx/shader.cpp
 	src/gfx/swapchain.cpp
 	src/gfx/window.cpp
-
-	vendor/imgui/imgui.cpp
-	vendor/imgui/imgui_draw.cpp
-	vendor/imgui/imgui_widgets.cpp
-	vendor/imgui/imgui_tables.cpp
-	vendor/imgui/imgui_demo.cpp
-	vendor/imgui/backends/imgui_impl_sdl3.cpp
-	vendor/imgui/backends/imgui_impl_vulkan.cpp
 )
 
 set(SHADER_SOURCE
@@ -41,28 +76,24 @@ set(SHADER_SOURCE
 	shaders/simple.vert
 )
 
-add_executable(${PROJECT_NAME} ${CXX_SOURCE})
-
-find_package(Vulkan REQUIRED)
-find_package(SDL3 REQUIRED)
-find_package(glm REQUIRED)
-find_package(EnTT REQUIRED)
-
 include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/include
-	${CMAKE_CURRENT_SOURCE_DIR}/vendor/imgui
 	${Vulkan_INCLUDE_DIRS}
 	${SDL3_INCLUDE_DIRS}
-	${GLM_INCLUDE_DIRS}
+	${glm_INCLUDE_DIRS}
 	${EnTT_INCLUDE_DIRS}
+	${imgui_SOURCE_DIR}
 )
 
+add_executable(${PROJECT_NAME} ${CXX_SOURCE})
+
 target_link_libraries(
-	${PROJECT_NAME}
-	${Vulkan_LIBRARIES}
-	${SDL3_LIBRARIES}
-	${GLM_LIBRARIES}
-	${EnTT_LIBRARIES}
+	${PROJECT_NAME} PRIVATE
+	Vulkan::Vulkan
+	SDL3
+	glm
+	EnTT::EnTT
+	imgui
 )
 
 if (CMAKE_IMPORT_LIBRARY_SUFFIX)
