@@ -41,7 +41,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(imgui)
 
 add_library(
-	imgui
+	imgui STATIC
 	${imgui_SOURCE_DIR}/imgui.cpp
 	${imgui_SOURCE_DIR}/imgui_draw.cpp
 	${imgui_SOURCE_DIR}/imgui_widgets.cpp
@@ -56,11 +56,18 @@ target_link_libraries(
 	SDL3::SDL3
 )
 
-add_compile_options(
-	-Wall
-	-Wextra
-	-Wpedantic
-)
+if (MSVC)
+	add_compile_options(
+		/W4
+		/permissive-
+	)
+else ()
+	add_compile_options(
+		-Wall
+		-Wextra
+		-Wpedantic
+	)
+endif ()
 
 set(CXX_SOURCE
 	src/app.cpp
@@ -97,7 +104,7 @@ target_link_libraries(
 	${PROJECT_NAME} PRIVATE
 	Vulkan::Vulkan
 	SDL3::SDL3
-	glm
+	glm::glm
 	EnTT::EnTT
 	imgui
 )
