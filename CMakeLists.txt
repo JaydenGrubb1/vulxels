@@ -50,6 +50,12 @@ add_library(
 	${imgui_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp
 )
 
+target_link_libraries(
+	imgui PRIVATE
+	Vulkan::Vulkan
+	SDL3::SDL3
+)
+
 add_compile_options(
 	-Wall
 	-Wextra
@@ -90,7 +96,7 @@ add_executable(${PROJECT_NAME} ${CXX_SOURCE})
 target_link_libraries(
 	${PROJECT_NAME} PRIVATE
 	Vulkan::Vulkan
-	SDL3
+	SDL3::SDL3
 	glm
 	EnTT::EnTT
 	imgui
