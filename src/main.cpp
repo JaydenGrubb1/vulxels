@@ -5,7 +5,6 @@
  */
 
 #include <SDL3/SDL.h>
-#include <getopt.h>
 #include <vulxels/app.h>
 #include <vulxels/version.h>
 
@@ -14,27 +13,8 @@
 #include <exception>
 #include <filesystem>
 
-int main(int argc, char** argv) {
-	int opt;
-	while ((opt = getopt(argc, argv, "vh")) != -1) {
-		switch (opt) {
-			case 'v':
-				printf(
-					"Vulxels version %d.%d.%d\n",
-					VULXELS_VERSION_MAJOR,
-					VULXELS_VERSION_MINOR,
-					VULXELS_VERSION_PATCH
-				);
-				return EXIT_SUCCESS;
-			case 'h':
-			default:
-				printf("Usage: %s [-v] [-h]\n", argv[0]);
-				printf("  -v: Print the version of the application\n");
-				printf("  -h: Print this help message\n");
-				return EXIT_SUCCESS;
-		}
-	}
-
+int main(int, char** argv) {
+	// TODO: Parse command line arguments
 	std::filesystem::current_path(std::filesystem::path(argv[0]).parent_path());
 
 	try {
