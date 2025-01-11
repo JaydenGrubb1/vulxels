@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <backends/imgui_impl_sdl2.h>
+#include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_vulkan.h>
 #include <imgui.h>
 #include <vulxels/app.h>
@@ -147,7 +147,7 @@ App::App() {
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
-	ImGui_ImplSDL2_InitForVulkan(m_window.window());
+	ImGui_ImplSDL3_InitForVulkan(m_window.window());
 	ImGui_ImplVulkan_InitInfo init_info = {};
 	init_info.Instance = *m_renderer.instance().instance();
 	init_info.PhysicalDevice = *m_renderer.device().physical_device();
@@ -185,7 +185,7 @@ static void draw(GFX::Renderer& renderer) {
 	}
 
 	ImGui_ImplVulkan_NewFrame();
-	ImGui_ImplSDL2_NewFrame();
+	ImGui_ImplSDL3_NewFrame();
 	ImGui::NewFrame();
 
 	draw_gui();
@@ -230,7 +230,7 @@ App::~App() {
 	m_renderer.device().wait_idle();
 
 	ImGui_ImplVulkan_Shutdown();
-	ImGui_ImplSDL2_Shutdown();
+	ImGui_ImplSDL3_Shutdown();
 	ImGui::DestroyContext();
 
 	s_imgui_pool.reset();
@@ -241,16 +241,16 @@ App::~App() {
 }
 
 void App::run() {
-	SDL_Event e;
+	SDL_Event event;
 
 	while (m_running) {
-		while (SDL_PollEvent(&e) != 0) {
-			ImGui_ImplSDL2_ProcessEvent(&e);
-			m_renderer.handle_events(e);
-			if (e.type == SDL_QUIT) {
+		while (SDL_PollEvent(&event) != 0) {
+			ImGui_ImplSDL3_ProcessEvent(&event);
+			m_renderer.handle_events(event);
+			if (event.type == SDL_EVENT_QUIT) {
 				m_running = false;
 			}
-			if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) {
+			if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_ESCAPE) {
 				m_running = false;
 			}
 		}

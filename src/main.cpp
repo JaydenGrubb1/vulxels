@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 #include <getopt.h>
 #include <vulxels/app.h>
 #include <vulxels/version.h>

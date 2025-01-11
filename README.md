@@ -7,7 +7,7 @@ Vulxels is/will be a voxel-based game written in C++ using the Vulkan API. The g
 ### Dependencies
 
 - [Vulkan](https://vulkan.lunarg.com/sdk/home)
-- [SDL2](https://github.com/libsdl-org/SDL)
+- [SDL3](https://github.com/libsdl-org/SDL)
 - [GLM](https://github.com/g-truc/glm)
 - [EnTT](https://github.com/skypjack/entt)
 
