@@ -34,6 +34,14 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(EnTT)
 
 FetchContent_Declare(
+	spdlog
+	GIT_REPOSITORY https://github.com/gabime/spdlog.git
+	GIT_TAG 8e5613379f5140fefb0b60412fbf1f5406e7c7f8 # v1.15.0
+	FIND_PACKAGE_ARGS NAMES spdlog
+)
+FetchContent_MakeAvailable(spdlog)
+
+FetchContent_Declare(
 	imgui
 	GIT_REPOSITORY https://github.com/ocornut/imgui.git
 	GIT_TAG 947aa9c9722bd6ff740dd757da609ff41f4d3ba3 # v1.91.6-docking
@@ -103,6 +111,7 @@ include_directories(
 	${SDL3_INCLUDE_DIRS}
 	${glm_INCLUDE_DIRS}
 	${EnTT_INCLUDE_DIRS}
+	${spdlog_INCLUDE_DIRS}
 	${imgui_SOURCE_DIR}
 )
 
@@ -118,6 +127,7 @@ target_link_libraries(
 	SDL3::SDL3
 	glm::glm
 	EnTT::EnTT
+	spdlog::spdlog
 	imgui
 )
 

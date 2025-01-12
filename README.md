@@ -10,6 +10,8 @@ Vulxels is/will be a voxel-based game written in C++ using the Vulkan API. The g
 - [SDL3](https://github.com/libsdl-org/SDL)
 - [GLM](https://github.com/g-truc/glm)
 - [EnTT](https://github.com/skypjack/entt)
+- [spdlog](https://github.com/gabime/spdlog)
+- [ImGui](https://github.com/ocornut/imgui)
 
 ### Instructions
 
