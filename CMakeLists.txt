@@ -76,12 +76,17 @@ else ()
 		-Wextra
 		-Wpedantic
 	)
+	if (WIN32)
+		add_link_options(
+			-static
+		)
+	endif ()
 endif ()
 
 if (WIN32)
 	add_compile_definitions(
-		_CRT_SECURE_NO_WARNINGS	# Disable bogus warnings about "unsafe" functions
-		NOMINMAX				# Prevent Windows.h from defining min() and max() macros
+		_CRT_SECURE_NO_WARNINGS
+		NOMINMAX
 	)
 endif ()
 
