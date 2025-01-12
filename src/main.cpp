@@ -5,6 +5,7 @@
  */
 
 #include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
 #include <vulxels/app.h>
 #include <vulxels/version.h>
 

@@ -99,7 +99,11 @@ include_directories(
 	${imgui_SOURCE_DIR}
 )
 
-add_executable(${PROJECT_NAME} ${CXX_SOURCE})
+if (WIN32 AND NOT CMAKE_BUILD_TYPE MATCHES Debug)
+	add_executable(${PROJECT_NAME} WIN32 ${CXX_SOURCE})
+else ()
+	add_executable(${PROJECT_NAME} ${CXX_SOURCE})
+endif ()
 
 target_link_libraries(
 	${PROJECT_NAME} PRIVATE
