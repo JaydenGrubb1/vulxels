@@ -4,10 +4,13 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+#ifdef _WIN32
+	#include <windows.h>
+#endif
+
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 #include <vulxels/app.h>
-#include <vulxels/version.h>
 
 #include <cstdio>
 #include <cstdlib>
@@ -17,6 +20,13 @@
 int main(int, char** argv) {
 	// TODO: Parse command line arguments
 	std::filesystem::current_path(std::filesystem::path(argv[0]).parent_path());
+
+#ifdef _WIN32
+	if (AttachConsole(ATTACH_PARENT_PROCESS)) {
+		std::freopen("CONOUT$", "w", stdout);
+		std::freopen("CONOUT$", "w", stderr);
+	}
+#endif
 
 	try {
 		Vulxels::App app;
