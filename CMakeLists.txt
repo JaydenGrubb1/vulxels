@@ -70,6 +70,13 @@ else ()
 	)
 endif ()
 
+if (WIN32)
+	add_compile_definitions(
+		_CRT_SECURE_NO_WARNINGS	# Disable bogus warnings about "unsafe" functions
+		NOMINMAX				# Prevent Windows.h from defining min() and max() macros
+	)
+endif ()
+
 set(CXX_SOURCE
 	src/app.cpp
 	src/main.cpp
