@@ -18,7 +18,7 @@ namespace Vulxels {
 
 	  private:
 		bool m_running = true;
-		GFX::Window m_window {"Vulxels", 800, 600};
+		GFX::Window m_window {"Vulxels", 1600, 900};
 		GFX::Renderer m_renderer {m_window};
 	};
 } // namespace Vulxels
