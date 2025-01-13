@@ -11,6 +11,8 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 #include <vulxels/app.h>
+#include <vulxels/log.h>
+#include <vulxels/version.h>
 
 #include <cstdio>
 #include <cstdlib>
@@ -27,6 +29,13 @@ int main(int, char** argv) {
 		std::freopen("CONOUT$", "w", stderr);
 	}
 #endif
+
+	VX_LOG(
+		"Vulxels v{}.{}.{}",
+		VULXELS_VERSION_MAJOR,
+		VULXELS_VERSION_MINOR,
+		VULXELS_VERSION_PATCH
+	);
 
 	try {
 		Vulxels::App app;
