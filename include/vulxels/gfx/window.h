@@ -8,8 +8,8 @@
 
 #include <SDL3/SDL.h>
 
+#include <span>
 #include <string_view>
-#include <vector>
 #include <vulkan/vulkan_raii.hpp>
 
 namespace Vulxels::GFX {
@@ -22,13 +22,14 @@ namespace Vulxels::GFX {
 		Window(const Window&) = delete;
 		Window& operator=(const Window&) = delete;
 
-		std::vector<const char*> get_required_extensions();
-		vk::raii::SurfaceKHR create_surface(vk::raii::Instance& instance);
+		vk::raii::SurfaceKHR create_surface(const vk::raii::Instance& instance) const;
 		vk::Extent2D extent() const;
 
-		SDL_Window* window() {
+		SDL_Window* window() const {
 			return m_window;
 		}
+
+		static std::span<const char* const> get_required_extensions();
 
 	  private:
 		SDL_Window* m_window = nullptr;

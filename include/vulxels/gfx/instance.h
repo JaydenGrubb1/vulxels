@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <vulxels/gfx/window.h>
-
 #include <array>
 #include <vulkan/vulkan_raii.hpp>
 
@@ -20,7 +18,7 @@ namespace Vulxels::GFX {
 
 	class Instance {
 	  public:
-		Instance(Window& window);
+		Instance();
 
 		Instance(const Instance&) = delete;
 		Instance& operator=(const Instance&) = delete;

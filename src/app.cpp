@@ -10,13 +10,12 @@
 #include <vulxels/app.h>
 #include <vulxels/gfx/buffer.h>
 #include <vulxels/gfx/descriptors.h>
+#include <vulxels/log.h>
 #include <vulxels/types.h>
 #include <vulxels/version.h>
 
 #include <cstdio>
 #include <glm/glm.hpp>
-#include <stdexcept>
-#include <thread>
 #include <vector>
 
 using namespace Vulxels;
@@ -40,12 +39,13 @@ static std::vector<Vertex> s_vertices = {
 };
 static std::vector<u32> s_indices = {0, 1, 2, 2, 3, 0};
 
-static void check_vk_result(VkResult err) {
+static void imgui_vulkan_err(const VkResult err) {
 	if (err == 0)
 		return;
-	fprintf(stderr, "[vulkan] Error: VkResult = %d\n", err);
-	if (err < 0)
-		abort();
+	VX_ERROR("ImGui Vulkan Error: {}", static_cast<u32>(err));
+	if (err < 0) {
+		throw std::runtime_error("ImGui Vulkan error");
+	}
 }
 
 App::App() {
@@ -55,22 +55,24 @@ App::App() {
 	s_render_pass = std::make_shared<vk::raii::RenderPass>(
 		m_renderer.device().device(),
 		vk::RenderPassCreateInfo()
-			.setAttachments({vk::AttachmentDescription()
-								 .setFormat(m_renderer.swapchain().format().format)
-								 .setSamples(vk::SampleCountFlagBits::e1)
-								 .setLoadOp(vk::AttachmentLoadOp::eClear)
-								 .setStoreOp(vk::AttachmentStoreOp::eStore)
-								 .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
-								 .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-								 .setInitialLayout(vk::ImageLayout::eUndefined)
-								 .setFinalLayout(vk::ImageLayout::ePresentSrcKHR)})
-			.setSubpasses({vk::SubpassDescription()
-							   .setPipelineBindPoint(vk::PipelineBindPoint::eGraphics)
-							   .setColorAttachments(
-								   {vk::AttachmentReference().setAttachment(0).setLayout(
-									   vk::ImageLayout::eColorAttachmentOptimal
-								   )}
-							   )})
+			.setAttachments(
+				{vk::AttachmentDescription()
+					 .setFormat(m_renderer.swapchain().format().format)
+					 .setSamples(vk::SampleCountFlagBits::e1)
+					 .setLoadOp(vk::AttachmentLoadOp::eClear)
+					 .setStoreOp(vk::AttachmentStoreOp::eStore)
+					 .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
+					 .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
+					 .setInitialLayout(vk::ImageLayout::eUndefined)
+					 .setFinalLayout(vk::ImageLayout::ePresentSrcKHR)}
+			)
+			.setSubpasses(
+				{vk::SubpassDescription()
+					 .setPipelineBindPoint(vk::PipelineBindPoint::eGraphics)
+					 .setColorAttachments({vk::AttachmentReference().setAttachment(0).setLayout(
+						 vk::ImageLayout::eColorAttachmentOptimal
+					 )})}
+			)
 			.setDependencies(
 				{vk::SubpassDependency()
 					 .setSrcSubpass(VK_SUBPASS_EXTERNAL)
@@ -91,36 +93,16 @@ App::App() {
 			.use_default()
 			.add_shader_stage(vert.module(), vk::ShaderStageFlagBits::eVertex)
 			.add_shader_stage(frag.module(), vk::ShaderStageFlagBits::eFragment)
-			.add_vertex_binding_description(
-				0,
-				sizeof(Vertex),
-				vk::VertexInputRate::eVertex
-			)
-			.add_vertex_attribute_description(
-				0,
-				0,
-				vk::Format::eR32G32Sfloat,
-				offsetof(Vertex, pos)
-			)
-			.add_vertex_attribute_description(
-				0,
-				1,
-				vk::Format::eR32G32B32Sfloat,
-				offsetof(Vertex, color)
-			)
+			.add_vertex_binding_description(0, sizeof(Vertex), vk::VertexInputRate::eVertex)
+			.add_vertex_attribute_description(0, 0, vk::Format::eR32G32Sfloat, offsetof(Vertex, pos))
+			.add_vertex_attribute_description(0, 1, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, color))
 			.set_render_pass(s_render_pass)
 	);
 
-	s_vertex_buffer = std::make_shared<GFX::Buffer>(
-		m_renderer.device(),
-		sizeof(Vertex) * s_vertices.size(),
-		vk::BufferUsageFlagBits::eVertexBuffer
-	);
-	s_index_buffer = std::make_shared<GFX::Buffer>(
-		m_renderer.device(),
-		sizeof(u32) * s_indices.size(),
-		vk::BufferUsageFlagBits::eIndexBuffer
-	);
+	s_vertex_buffer = std::make_shared<
+		GFX::Buffer>(m_renderer.device(), sizeof(Vertex) * s_vertices.size(), vk::BufferUsageFlagBits::eVertexBuffer);
+	s_index_buffer = std::make_shared<
+		GFX::Buffer>(m_renderer.device(), sizeof(u32) * s_indices.size(), vk::BufferUsageFlagBits::eIndexBuffer);
 
 	s_vertex_buffer->write(s_vertices);
 	s_index_buffer->write(s_indices);
@@ -160,26 +142,21 @@ App::App() {
 	init_info.ImageCount = m_renderer.swapchain().image_count();
 	init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 	init_info.RenderPass = **s_render_pass;
-	init_info.CheckVkResultFn = check_vk_result;
+	init_info.CheckVkResultFn = imgui_vulkan_err;
 	ImGui_ImplVulkan_Init(&init_info);
 }
 
 static void draw_gui() {
-	ImGuiIO& io = ImGui::GetIO();
+	const ImGuiIO& io = ImGui::GetIO();
 	if (ImGui::Begin("Statistics")) {
-		ImGui::Text(
-			"Vulxels %d.%d.%d",
-			VULXELS_VERSION_MAJOR,
-			VULXELS_VERSION_MINOR,
-			VULXELS_VERSION_PATCH
-		);
+		ImGui::Text("Vulxels %d.%d.%d", VX_VERSION_MAJOR, VX_VERSION_MINOR, VX_VERSION_PATCH);
 		ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
 	}
 	ImGui::End();
 }
 
 static void draw(GFX::Renderer& renderer) {
-	auto cmd = renderer.begin_frame();
+	const auto cmd = renderer.begin_frame();
 	if (!cmd) {
 		return;
 	}
@@ -209,10 +186,7 @@ static void draw(GFX::Renderer& renderer) {
 			 .setMinDepth(0.0f)
 			 .setMaxDepth(1.0f)}
 	);
-	cmd->setScissor(
-		0,
-		{vk::Rect2D().setOffset({0, 0}).setExtent(renderer.swapchain().extent())}
-	);
+	cmd->setScissor(0, {vk::Rect2D().setOffset({0, 0}).setExtent(renderer.swapchain().extent())});
 
 	cmd->bindVertexBuffers(0, {s_vertex_buffer->buffer()}, {0});
 	cmd->bindIndexBuffer(s_index_buffer->buffer(), 0, vk::IndexType::eUint32);

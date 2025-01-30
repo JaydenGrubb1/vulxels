@@ -12,7 +12,6 @@
 #include <vulxels/types.h>
 
 #include <cstddef>
-#include <optional>
 #include <set>
 #include <vulkan/vulkan_raii.hpp>
 
@@ -25,7 +24,7 @@ namespace Vulxels::GFX {
 
 	class Device {
 	  public:
-		Device(Instance& instance, Window& window);
+		Device(Instance& instance, const Window& window);
 		~Device() = default;
 
 		Device(const Device&) = delete;
@@ -55,15 +54,12 @@ namespace Vulxels::GFX {
 			return m_present_queue;
 		}
 
-		void wait_idle() {
+		void wait_idle() const {
 			m_device.waitIdle();
 		}
 
-		bool wait_for_fence(
-			vk::raii::Fence& fence,
-			u64 timeout = std::numeric_limits<u64>::max()
-		) {
-			auto res = m_device.waitForFences({*fence}, VK_TRUE, timeout);
+		bool wait_for_fence(const vk::raii::Fence& fence, const u64 timeout = std::numeric_limits<u64>::max()) const {
+			const auto res = m_device.waitForFences({*fence}, VK_TRUE, timeout);
 			if (res != vk::Result::eSuccess && res != vk::Result::eTimeout) {
 				throw std::runtime_error("Failed to wait for fence");
 			}
@@ -71,8 +67,8 @@ namespace Vulxels::GFX {
 		}
 
 		SwapchainSupportDetails query_swapchain_support() const;
-		vk::raii::CommandBuffer* begin_one_time_command();
-		void end_one_time_command(vk::raii::CommandBuffer* cmd);
+		vk::raii::CommandBuffer* begin_one_time_command() const;
+		void end_one_time_command(const vk::raii::CommandBuffer* cmd) const;
 
 	  private:
 		Instance& m_instance;
@@ -85,7 +81,7 @@ namespace Vulxels::GFX {
 		Queue m_present_queue;
 
 		void pick_physical_device();
-		void create_logical_device(std::set<u32> queues);
+		void create_logical_device(const std::set<u32>& queues);
 		void create_command_pool();
 	};
 } // namespace Vulxels::GFX

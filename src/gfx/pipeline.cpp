@@ -21,8 +21,8 @@ Pipeline::Builder& Pipeline::Builder::use_default() {
 		.add_color_blend_attachment(
 			vk::PipelineColorBlendAttachmentState()
 				.setColorWriteMask(
-					vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG
-					| vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA
+					vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB
+					| vk::ColorComponentFlagBits::eA
 				)
 				.setBlendEnable(false)
 		)

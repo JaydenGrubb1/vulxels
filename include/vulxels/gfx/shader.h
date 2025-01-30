@@ -7,7 +7,6 @@
 #pragma once
 
 #include <vulxels/gfx/device.h>
-#include <vulxels/types.h>
 
 #include <string_view>
 #include <vulkan/vulkan_raii.hpp>
@@ -15,8 +14,8 @@
 namespace Vulxels::GFX {
 	class Shader {
 	  public:
-		Shader(Device& device) : m_device(device) {}
-		Shader(Device& device, std::string_view path) : m_device(device) {
+		explicit Shader(Device& device) : m_device(device) {}
+		Shader(Device& device, const std::string_view path) : m_device(device) {
 			load_spirv(path);
 		}
 		~Shader() = default;

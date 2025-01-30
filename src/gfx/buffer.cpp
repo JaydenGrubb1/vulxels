@@ -12,9 +12,9 @@ using namespace Vulxels::GFX;
 
 Buffer::Buffer(
 	Device& device,
-	vk::DeviceSize size,
-	vk::BufferUsageFlags usage,
-	vk::MemoryPropertyFlags properties
+	const vk::DeviceSize size,
+	const vk::BufferUsageFlags usage,
+	const vk::MemoryPropertyFlags properties
 ) :
 	m_device(device),
 	m_size(size),
@@ -33,20 +33,18 @@ Buffer::Buffer(
 			.setFlags(vk::BufferCreateFlagBits())
 	);
 
-	auto requirements = m_buffer.getMemoryRequirements();
-	u32 memory_type = find_memory_type(requirements.memoryTypeBits, m_properties);
+	const auto requirements = m_buffer.getMemoryRequirements();
+	const u32 memory_type = find_memory_type(requirements.memoryTypeBits, m_properties);
 
 	m_memory = vk::raii::DeviceMemory(
 		m_device.device(),
-		vk::MemoryAllocateInfo()
-			.setAllocationSize(requirements.size)
-			.setMemoryTypeIndex(memory_type)
+		vk::MemoryAllocateInfo().setAllocationSize(requirements.size).setMemoryTypeIndex(memory_type)
 	);
 
 	m_buffer.bindMemory(*m_memory, 0);
 }
 
-void* Buffer::map(vk::DeviceSize size, vk::DeviceSize offset) {
+void* Buffer::map(const vk::DeviceSize size, const vk::DeviceSize offset) {
 	if (!(m_properties & vk::MemoryPropertyFlagBits::eHostVisible)) {
 		m_staging_size = size == VK_WHOLE_SIZE ? m_size : size;
 		m_staging_offset = offset;
@@ -54,8 +52,7 @@ void* Buffer::map(vk::DeviceSize size, vk::DeviceSize offset) {
 			m_device,
 			m_staging_size,
 			vk::BufferUsageFlagBits::eTransferSrc,
-			vk::MemoryPropertyFlagBits::eHostVisible
-				| vk::MemoryPropertyFlagBits::eHostCoherent
+			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
 		);
 		return m_staging->map();
 	} else {
@@ -66,7 +63,7 @@ void* Buffer::map(vk::DeviceSize size, vk::DeviceSize offset) {
 void Buffer::unmap() {
 	if (m_staging) {
 		m_staging->unmap();
-		auto cmd = m_device.begin_one_time_command();
+		const auto cmd = m_device.begin_one_time_command();
 		cmd->copyBuffer(
 			*m_staging->m_buffer,
 			m_buffer,
@@ -79,29 +76,28 @@ void Buffer::unmap() {
 	}
 }
 
-void Buffer::flush(vk::DeviceSize size, vk::DeviceSize offset) {
+void Buffer::flush(const vk::DeviceSize size, const vk::DeviceSize offset) const {
 	m_device.device().flushMappedMemoryRanges(
 		{vk::MappedMemoryRange().setMemory(*m_memory).setSize(size).setOffset(offset)}
 	);
 }
 
-void Buffer::invalidate(vk::DeviceSize size, vk::DeviceSize offset) {
+void Buffer::invalidate(const vk::DeviceSize size, const vk::DeviceSize offset) const {
 	m_device.device().invalidateMappedMemoryRanges(
 		{vk::MappedMemoryRange().setMemory(*m_memory).setSize(size).setOffset(offset)}
 	);
 }
 
-void Buffer::write(void* data, vk::DeviceSize size, vk::DeviceSize offset) {
-	auto ptr = map(size, offset);
+void Buffer::write(const void* data, const vk::DeviceSize size, const vk::DeviceSize offset) {
+	const auto ptr = map(size, offset);
 	std::memcpy(ptr, data, size);
 	unmap();
 }
 
-u32 Buffer::find_memory_type(u32 type_filter, vk::MemoryPropertyFlags properties) {
-	auto mem_props = m_device.physical_device().getMemoryProperties();
+u32 Buffer::find_memory_type(const u32 type_filter, const vk::MemoryPropertyFlags properties) const {
+	const auto mem_props = m_device.physical_device().getMemoryProperties();
 	for (u32 i = 0; i < mem_props.memoryTypeCount; i++) {
-		if ((type_filter & (1 << i))
-			&& (mem_props.memoryTypes[i].propertyFlags & properties) == properties) {
+		if ((type_filter & (1 << i)) && (mem_props.memoryTypes[i].propertyFlags & properties) == properties) {
 			return i;
 		}
 	}

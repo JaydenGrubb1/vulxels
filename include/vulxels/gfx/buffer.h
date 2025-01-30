@@ -36,23 +36,19 @@ namespace Vulxels::GFX {
 
 		void* map(vk::DeviceSize size = VK_WHOLE_SIZE, vk::DeviceSize offset = 0);
 		void unmap();
-		void flush(vk::DeviceSize size = VK_WHOLE_SIZE, vk::DeviceSize offset = 0);
-		void invalidate(vk::DeviceSize size = VK_WHOLE_SIZE, vk::DeviceSize offset = 0);
-		void write(void* data, vk::DeviceSize size, vk::DeviceSize offset = 0);
+		void flush(vk::DeviceSize size = VK_WHOLE_SIZE, vk::DeviceSize offset = 0) const;
+		void invalidate(vk::DeviceSize size = VK_WHOLE_SIZE, vk::DeviceSize offset = 0) const;
+		void write(const void* data, vk::DeviceSize size, vk::DeviceSize offset = 0);
 
 		template<typename Iter>
 			requires std::contiguous_iterator<Iter>
-		void write(Iter begin, Iter end, vk::DeviceSize offset = 0) {
-			write(
-				std::addressof(*begin),
-				std::distance(begin, end) * sizeof(*begin),
-				offset
-			);
+		void write(Iter begin, Iter end, const vk::DeviceSize offset = 0) {
+			write(std::addressof(*begin), std::distance(begin, end) * sizeof(*begin), offset);
 		}
 
 		template<typename R>
 			requires std::ranges::contiguous_range<R>
-		void write(R&& range, vk::DeviceSize offset = 0) {
+		void write(R&& range, const vk::DeviceSize offset = 0) {
 			write(std::ranges::begin(range), std::ranges::end(range), offset);
 		}
 
@@ -69,6 +65,6 @@ namespace Vulxels::GFX {
 		vk::DeviceSize m_staging_size = 0;
 		vk::DeviceSize m_staging_offset = 0;
 
-		u32 find_memory_type(u32 type_filter, vk::MemoryPropertyFlags properties);
+		u32 find_memory_type(u32 type_filter, vk::MemoryPropertyFlags properties) const;
 	};
 } // namespace Vulxels::GFX

@@ -18,7 +18,7 @@ namespace Vulxels::GFX {
 	  public:
 		static constexpr u32 MAX_FRAMES_IN_FLIGHT = 2;
 
-		Renderer(Window& window);
+		explicit Renderer(Window& window);
 		~Renderer();
 
 		Renderer(const Renderer&) = delete;
@@ -36,7 +36,7 @@ namespace Vulxels::GFX {
 			return m_swapchain;
 		}
 
-		Shader create_shader(std::string_view path) {
+		Shader create_shader(const std::string_view path) {
 			return Shader(m_device, path);
 		}
 
@@ -44,11 +44,11 @@ namespace Vulxels::GFX {
 			return Pipeline::Builder(m_device);
 		}
 
-		void handle_events(SDL_Event& event);
+		void handle_events(const SDL_Event& event);
 
 	  private:
 		Window& m_window;
-		Instance m_instance {m_window};
+		Instance m_instance;
 		Device m_device {m_instance, m_window};
 		Swapchain m_swapchain {m_device, m_window};
 
@@ -61,6 +61,6 @@ namespace Vulxels::GFX {
 	  public:
 		// TODO: make these private
 		vk::raii::CommandBuffer* begin_frame();
-		void end_frame(vk::raii::CommandBuffer* cmd);
+		void end_frame(const vk::raii::CommandBuffer* cmd);
 	};
 } // namespace Vulxels::GFX

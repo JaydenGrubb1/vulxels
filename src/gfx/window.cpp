@@ -12,15 +12,10 @@
 
 using namespace Vulxels::GFX;
 
-Window::Window(std::string_view title, int width, int height) {
+Window::Window(const std::string_view title, const int width, const int height) {
 	SDL_Init(SDL_INIT_VIDEO);
 
-	m_window = SDL_CreateWindow(
-		title.data(),
-		width,
-		height,
-		SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE
-	);
+	m_window = SDL_CreateWindow(title.data(), width, height, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
 
 	if (m_window == nullptr) {
 		throw std::runtime_error("Failed to create window");
@@ -31,22 +26,21 @@ Window::~Window() {
 	SDL_DestroyWindow(m_window);
 }
 
-std::vector<const char*> Window::get_required_extensions() {
-	u32 count;
-	auto extensions = SDL_Vulkan_GetInstanceExtensions(&count);
-	return {extensions, extensions + count};
-}
-
-vk::raii::SurfaceKHR Window::create_surface(vk::raii::Instance& instance) {
+vk::raii::SurfaceKHR Window::create_surface(const vk::raii::Instance& instance) const {
 	VkSurfaceKHR surface;
 	if (!SDL_Vulkan_CreateSurface(m_window, *instance, nullptr, &surface)) {
 		throw std::runtime_error("Failed to create Vulkan surface");
 	}
-	return vk::raii::SurfaceKHR(instance, surface);
+	return {instance, surface};
 }
 
 vk::Extent2D Window::extent() const {
 	int width, height;
 	SDL_GetWindowSizeInPixels(m_window, &width, &height);
-	return vk::Extent2D(width, height);
+	return {static_cast<u32>(width), static_cast<u32>(height)};
+}
+
+std::span<const char* const> Window::get_required_extensions() {
+	u32 count;
+	return {SDL_Vulkan_GetInstanceExtensions(&count), count};
 }

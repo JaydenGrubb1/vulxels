@@ -5,6 +5,7 @@
  */
 
 #include <vulxels/gfx/swapchain.h>
+#include <vulxels/log.h>
 
 #include <algorithm>
 #include <array>
@@ -12,9 +13,7 @@
 
 using namespace Vulxels::GFX;
 
-Swapchain::Swapchain(Device& device, Window& window) :
-	m_device(device),
-	m_window(window) {
+Swapchain::Swapchain(Device& device, Window& window) : m_device(device), m_window(window) {
 	auto support = m_device.query_swapchain_support();
 	choose_format(support.formats);
 	choose_present_mode(support.present_modes);
@@ -25,7 +24,7 @@ Swapchain::Swapchain(Device& device, Window& window) :
 	create_image_views();
 }
 
-void Swapchain::set_render_pass(std::shared_ptr<vk::raii::RenderPass> pass) {
+void Swapchain::set_render_pass(const std::shared_ptr<vk::raii::RenderPass>& pass) {
 	// TODO: don't recreate framebuffers if render pass is compatible
 	m_render_pass = pass;
 	create_framebuffers();
@@ -38,7 +37,7 @@ void Swapchain::set_resized() {
 void Swapchain::recreate() {
 	m_device.wait_idle();
 	m_resized = false;
-	auto support = m_device.query_swapchain_support();
+	const auto support = m_device.query_swapchain_support();
 	if (choose_extent(support.capabilities)) {
 		create_swapchain();
 		create_image_views();
@@ -46,32 +45,30 @@ void Swapchain::recreate() {
 	}
 }
 
-bool Swapchain::acquire(vk::raii::Semaphore& signal) {
+bool Swapchain::acquire(const vk::raii::Semaphore& signal) {
 	try {
-		auto [res, idx] =
-			m_swapchain.acquireNextImage(std::numeric_limits<u64>::max(), *signal);
+		auto [res, idx] = m_swapchain.acquireNextImage(std::numeric_limits<u64>::max(), *signal);
 		m_current_image = idx;
 		if (res == vk::Result::eSuboptimalKHR) {
 			m_resized = true;
 		}
 		return true;
-	} catch (vk::OutOfDateKHRError& e) {
+	} catch ([[maybe_unused]] vk::OutOfDateKHRError& e) {
 		recreate();
 		return false;
 	}
 }
 
-bool Swapchain::present(vk::raii::Semaphore& wait) {
+bool Swapchain::present(const vk::raii::Semaphore& wait) {
 	try {
-		auto res = m_device.present_queue().present(vk::PresentInfoKHR()
-														.setSwapchains(*m_swapchain)
-														.setImageIndices(m_current_image)
-														.setWaitSemaphores(*wait));
+		const auto res = m_device.present_queue().present(
+			vk::PresentInfoKHR().setSwapchains(*m_swapchain).setImageIndices(m_current_image).setWaitSemaphores(*wait)
+		);
 		if (res == vk::Result::eSuboptimalKHR || m_resized) {
 			recreate();
 			return false;
 		}
-	} catch (vk::OutOfDateKHRError& e) {
+	} catch ([[maybe_unused]] vk::OutOfDateKHRError& e) {
 		recreate();
 		return false;
 	}
@@ -99,10 +96,7 @@ void Swapchain::create_swapchain() {
 		create.oldSwapchain = nullptr;
 	}
 
-	std::array queue_indices = {
-		m_device.graphics_queue().index(),
-		m_device.present_queue().index()
-	};
+	const std::array queue_indices = {m_device.graphics_queue().index(), m_device.present_queue().index()};
 
 	if (m_device.graphics_queue().index() != m_device.present_queue().index()) {
 		create.imageSharingMode = vk::SharingMode::eConcurrent;
@@ -115,7 +109,7 @@ void Swapchain::create_swapchain() {
 	auto temp = vk::raii::SwapchainKHR(m_device.device(), create);
 	m_swapchain = std::move(temp);
 
-	printf("Created swapchain (%dx%d)\n", m_extent.width, m_extent.height);
+	VX_DEBUG("Created swapchain ({}x{})", m_extent.width, m_extent.height);
 }
 
 void Swapchain::create_image_views() {
@@ -124,7 +118,7 @@ void Swapchain::create_image_views() {
 	m_image_views.reserve(m_images.size());
 
 	for (const auto& image : m_images) {
-		m_image_views.push_back(vk::raii::ImageView(
+		m_image_views.emplace_back(
 			m_device.device(),
 			vk::ImageViewCreateInfo()
 				.setImage(image)
@@ -132,7 +126,8 @@ void Swapchain::create_image_views() {
 				.setFormat(m_format.format)
 				.setComponents({})
 				.setSubresourceRange({vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1})
-		));
+
+		);
 	}
 }
 
@@ -146,7 +141,7 @@ void Swapchain::create_framebuffers() {
 
 	for (const auto& view : m_image_views) {
 		std::array attachments = {*view};
-		m_framebuffers.push_back(vk::raii::Framebuffer(
+		m_framebuffers.emplace_back(
 			m_device.device(),
 			vk::FramebufferCreateInfo()
 				.setRenderPass(*m_render_pass)
@@ -154,15 +149,15 @@ void Swapchain::create_framebuffers() {
 				.setWidth(m_extent.width)
 				.setHeight(m_extent.height)
 				.setLayers(1)
-		));
+
+		);
 	}
 }
 
 void Swapchain::choose_format(std::vector<vk::SurfaceFormatKHR>& formats) {
 	m_format = formats.front();
 	for (const auto& format : formats) {
-		if (format.format == vk::Format::eB8G8R8A8Unorm
-			&& format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear) {
+		if (format.format == vk::Format::eB8G8R8A8Unorm && format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear) {
 			m_format = format;
 			break;
 		}
@@ -179,27 +174,21 @@ void Swapchain::choose_present_mode(std::vector<vk::PresentModeKHR>& modes) {
 	}
 }
 
-void Swapchain::choose_image_count(vk::SurfaceCapabilitiesKHR& capabilities) {
+void Swapchain::choose_image_count(const vk::SurfaceCapabilitiesKHR& capabilities) {
 	m_image_count = capabilities.minImageCount + 1;
 	if (capabilities.maxImageCount > 0 && m_image_count > capabilities.maxImageCount) {
 		m_image_count = capabilities.maxImageCount;
 	}
 }
 
-bool Swapchain::choose_extent(vk::SurfaceCapabilitiesKHR& capabilities) {
-	auto old = m_extent;
+bool Swapchain::choose_extent(const vk::SurfaceCapabilitiesKHR& capabilities) {
+	const auto old = m_extent;
 	if (capabilities.currentExtent.width == std::numeric_limits<u32>::max()) {
-		auto window_extent = m_window.extent();
-		m_extent.width = std::clamp(
-			window_extent.width,
-			capabilities.minImageExtent.width,
-			capabilities.maxImageExtent.width
-		);
-		m_extent.height = std::clamp(
-			window_extent.height,
-			capabilities.minImageExtent.height,
-			capabilities.maxImageExtent.height
-		);
+		const auto window_extent = m_window.extent();
+		m_extent.width =
+			std::clamp(window_extent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
+		m_extent.height =
+			std::clamp(window_extent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
 	} else {
 		m_extent = capabilities.currentExtent;
 	}

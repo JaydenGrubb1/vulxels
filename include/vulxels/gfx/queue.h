@@ -6,7 +6,6 @@
 
 #pragma once
 
-// #include <vulxels/gfx/device.h>
 #include <vulxels/types.h>
 
 #include <tuple>
@@ -17,7 +16,7 @@ namespace Vulxels::GFX {
 	class Queue {
 	  public:
 		static std::tuple<u32, u32>
-		find_families(vk::raii::PhysicalDevice& device, vk::raii::SurfaceKHR& surface);
+		find_families(const vk::raii::PhysicalDevice& device, const vk::raii::SurfaceKHR& surface);
 
 		Queue() = default;
 		Queue(Device& device, u32 index);
@@ -32,19 +31,19 @@ namespace Vulxels::GFX {
 			return m_queue;
 		}
 
-		u32 index() {
+		u32 index() const {
 			return m_index;
 		}
 
-		void wait_idle() {
+		void wait_idle() const {
 			m_queue.waitIdle();
 		}
 
-		void submit(const vk::SubmitInfo& info, vk::Fence fence = {}) {
+		void submit(const vk::SubmitInfo& info, const vk::Fence fence = {}) const {
 			m_queue.submit(info, fence);
 		}
 
-		vk::Result present(const vk::PresentInfoKHR& info) {
+		vk::Result present(const vk::PresentInfoKHR& info) const {
 			return m_queue.presentKHR(info);
 		}
 

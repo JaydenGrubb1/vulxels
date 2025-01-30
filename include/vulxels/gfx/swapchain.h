@@ -34,34 +34,34 @@ namespace Vulxels::GFX {
 			return m_framebuffers[index];
 		}
 
-		vk::SurfaceFormatKHR format() {
+		vk::SurfaceFormatKHR format() const {
 			return m_format;
 		}
 
-		vk::PresentModeKHR present_mode() {
+		vk::PresentModeKHR present_mode() const {
 			return m_present_mode;
 		}
 
-		vk::Extent2D extent() {
+		vk::Extent2D extent() const {
 			return m_extent;
 		}
 
-		float aspect() {
-			return static_cast<float>(m_extent.width) / m_extent.height;
+		float aspect() const {
+			return static_cast<float>(m_extent.width) / static_cast<float>(m_extent.height);
 		}
 
-		u32 image_count() {
+		u32 image_count() const {
 			return m_image_count;
 		}
 
-		u32 current_image() {
+		u32 current_image() const {
 			return m_current_image;
 		}
 
-		void set_render_pass(std::shared_ptr<vk::raii::RenderPass> pass);
+		void set_render_pass(const std::shared_ptr<vk::raii::RenderPass>& pass);
 		void set_resized();
-		bool acquire(vk::raii::Semaphore& signal);
-		bool present(vk::raii::Semaphore& wait);
+		bool acquire(const vk::raii::Semaphore& signal);
+		bool present(const vk::raii::Semaphore& wait);
 
 	  private:
 		Device& m_device;
@@ -87,7 +87,7 @@ namespace Vulxels::GFX {
 
 		void choose_format(std::vector<vk::SurfaceFormatKHR>& formats);
 		void choose_present_mode(std::vector<vk::PresentModeKHR>& modes);
-		void choose_image_count(vk::SurfaceCapabilitiesKHR& capabilities);
-		bool choose_extent(vk::SurfaceCapabilitiesKHR& capabilities);
+		void choose_image_count(const vk::SurfaceCapabilitiesKHR& capabilities);
+		bool choose_extent(const vk::SurfaceCapabilitiesKHR& capabilities);
 	};
 } // namespace Vulxels::GFX

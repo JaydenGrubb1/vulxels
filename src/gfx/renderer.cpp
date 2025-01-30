@@ -22,16 +22,9 @@ Renderer::Renderer(Window& window) : m_window(window) {
 	m_render_finished.reserve(MAX_FRAMES_IN_FLIGHT);
 
 	for (u32 i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-		m_frame_ready.push_back(vk::raii::Fence(
-			m_device.device(),
-			vk::FenceCreateInfo().setFlags(vk::FenceCreateFlagBits::eSignaled)
-		));
-		m_image_available.push_back(
-			vk::raii::Semaphore(m_device.device(), vk::SemaphoreCreateInfo())
-		);
-		m_render_finished.push_back(
-			vk::raii::Semaphore(m_device.device(), vk::SemaphoreCreateInfo())
-		);
+		m_frame_ready.emplace_back(m_device.device(), vk::FenceCreateInfo().setFlags(vk::FenceCreateFlagBits::eSignaled));
+		m_image_available.emplace_back(m_device.device(), vk::SemaphoreCreateInfo());
+		m_render_finished.emplace_back(m_device.device(), vk::SemaphoreCreateInfo());
 	}
 }
 
@@ -50,11 +43,9 @@ vk::raii::CommandBuffer* Renderer::begin_frame() {
 	return &cmd;
 }
 
-void Renderer::end_frame(vk::raii::CommandBuffer* cmd) {
+void Renderer::end_frame(const vk::raii::CommandBuffer* cmd) {
 	cmd->end();
-	vk::PipelineStageFlags wait_stages[] = {
-		vk::PipelineStageFlagBits::eColorAttachmentOutput
-	};
+	constexpr vk::PipelineStageFlags wait_stages[] = {vk::PipelineStageFlagBits::eColorAttachmentOutput};
 	m_device.graphics_queue().submit(
 		vk::SubmitInfo()
 			.setCommandBuffers(**cmd)
@@ -67,10 +58,11 @@ void Renderer::end_frame(vk::raii::CommandBuffer* cmd) {
 	m_current_frame = (m_current_frame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
-void Renderer::handle_events(SDL_Event& event) {
+void Renderer::handle_events(const SDL_Event& event) {
 	switch (event.type) {
 		case SDL_EVENT_WINDOW_RESIZED:
 			m_swapchain.set_resized();
 			break;
+		default:;
 	}
 }

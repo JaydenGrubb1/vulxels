@@ -5,6 +5,7 @@
  */
 
 #include <vulxels/gfx/device.h>
+#include <vulxels/log.h>
 
 #include <cstdio>
 #include <stdexcept>
@@ -12,9 +13,9 @@
 
 using namespace Vulxels::GFX;
 
-static constexpr const std::array DEVICE_EXTENSIONS = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+static constexpr std::array DEVICE_EXTENSIONS = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
-Device::Device(Instance& instance, Window& window) : m_instance(instance) {
+Device::Device(Instance& instance, const Window& window) : m_instance(instance) {
 	m_surface = window.create_surface(m_instance.instance());
 
 	pick_physical_device();
@@ -29,7 +30,7 @@ Device::Device(Instance& instance, Window& window) : m_instance(instance) {
 	create_command_pool();
 }
 
-vk::raii::CommandBuffer* Device::begin_one_time_command() {
+vk::raii::CommandBuffer* Device::begin_one_time_command() const {
 	vk::raii::CommandBuffers cmds(
 		m_device,
 		vk::CommandBufferAllocateInfo()
@@ -37,14 +38,12 @@ vk::raii::CommandBuffer* Device::begin_one_time_command() {
 			.setLevel(vk::CommandBufferLevel::ePrimary)
 			.setCommandBufferCount(1)
 	);
-	auto cmd = new vk::raii::CommandBuffer(std::move(cmds.front()));
-	cmd->begin(vk::CommandBufferBeginInfo().setFlags(
-		vk::CommandBufferUsageFlagBits::eOneTimeSubmit
-	));
+	const auto cmd = new vk::raii::CommandBuffer(std::move(cmds.front()));
+	cmd->begin(vk::CommandBufferBeginInfo().setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit));
 	return cmd;
 }
 
-void Device::end_one_time_command(vk::raii::CommandBuffer* cmd) {
+void Device::end_one_time_command(const vk::raii::CommandBuffer* cmd) const {
 	cmd->end();
 	m_graphics_queue.submit(vk::SubmitInfo().setCommandBuffers({**cmd}));
 	m_graphics_queue.wait_idle();
@@ -54,22 +53,17 @@ void Device::end_one_time_command(vk::raii::CommandBuffer* cmd) {
 void Device::pick_physical_device() {
 	m_physical_device = m_instance.instance().enumeratePhysicalDevices().front();
 	// TODO: Select the best physical device
-
-	printf(
-		"Using physical device: %s\n",
-		m_physical_device.getProperties().deviceName.data()
-	);
+	VX_LOG("Using physical device: {}", m_physical_device.getProperties().deviceName.data());
 }
 
-void Device::create_logical_device(std::set<u32> queues) {
+void Device::create_logical_device(const std::set<u32>& queues) {
 	std::vector<vk::DeviceQueueCreateInfo> queue_create_infos;
 
-	f32 queue_priority = 1.0f;
-	for (u32 idx : queues) {
-		queue_create_infos.push_back(vk::DeviceQueueCreateInfo()
-										 .setQueueFamilyIndex(idx)
-										 .setQueueCount(1)
-										 .setPQueuePriorities(&queue_priority));
+	constexpr f32 queue_priority = 1.0f;
+	for (const u32 idx : queues) {
+		queue_create_infos.push_back(
+			vk::DeviceQueueCreateInfo().setQueueFamilyIndex(idx).setQueueCount(1).setPQueuePriorities(&queue_priority)
+		);
 	}
 
 	vk::PhysicalDeviceFeatures device_features;
@@ -96,10 +90,7 @@ void Device::create_command_pool() {
 		m_device,
 		vk::CommandPoolCreateInfo()
 			.setQueueFamilyIndex(m_graphics_queue.index())
-			.setFlags(
-				vk::CommandPoolCreateFlagBits::eResetCommandBuffer
-				| vk::CommandPoolCreateFlagBits::eTransient
-			)
+			.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer | vk::CommandPoolCreateFlagBits::eTransient)
 	);
 }
 

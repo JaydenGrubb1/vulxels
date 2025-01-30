@@ -5,16 +5,18 @@
  */
 
 #include <vulxels/gfx/instance.h>
+#include <vulxels/gfx/window.h>
+#include <vulxels/log.h>
 #include <vulxels/types.h>
 #include <vulxels/version.h>
 
 using namespace Vulxels::GFX;
 
-Instance::Instance(Window& window) {
-	u32 api_version = m_context.enumerateInstanceVersion();
+Instance::Instance() {
+	const u32 api_version = m_context.enumerateInstanceVersion();
 
-	printf(
-		"Vulkan API version: %d.%d.%d-%d\n",
+	VX_LOG(
+		"Vulkan API version: {}.{}.{}-{}",
 		VK_API_VERSION_MAJOR(api_version),
 		VK_API_VERSION_MINOR(api_version),
 		VK_API_VERSION_PATCH(api_version),
@@ -25,19 +27,13 @@ Instance::Instance(Window& window) {
 		throw std::runtime_error("Vulkan API version too low");
 	}
 
-	u32 vulxels_version = VK_MAKE_VERSION(
-		VULXELS_VERSION_MAJOR,
-		VULXELS_VERSION_MINOR,
-		VULXELS_VERSION_PATCH
-	);
-
 	m_appinfo.setPApplicationName("Vulxels");
-	m_appinfo.setApplicationVersion(vulxels_version);
+	m_appinfo.setApplicationVersion(VK_MAKE_VERSION(VX_VERSION_MAJOR, VX_VERSION_MINOR, VX_VERSION_PATCH));
 	m_appinfo.setPEngineName("Vulxels");
 	m_appinfo.setEngineVersion(api_version);
 	m_appinfo.setApiVersion(VK_API_VERSION_1_2);
 
-	auto extensions = window.get_required_extensions();
+	auto extensions = Window::get_required_extensions();
 
 	// TODO: Check if extensions are supported
 	// TODO: Check if validation layers are supported

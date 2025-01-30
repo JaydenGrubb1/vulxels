@@ -14,7 +14,7 @@
 namespace Vulxels::GFX {
 	class DescriptorLayout {
 	  public:
-		DescriptorLayout(Device& device) : m_device(device) {}
+		explicit DescriptorLayout(Device& device) : m_device(device) {}
 		~DescriptorLayout() = default;
 
 		DescriptorLayout(const DescriptorLayout&) = delete;
@@ -56,29 +56,24 @@ namespace Vulxels::GFX {
 			return m_set;
 		}
 
-		void bind_buffer(
-			u32 binding,
-			vk::raii::Buffer& buffer,
-			vk::DeviceSize range,
-			vk::DeviceSize offset = 0
-		);
+		void bind_buffer(u32 binding, const vk::raii::Buffer& buffer, vk::DeviceSize range, vk::DeviceSize offset = 0);
 		// TODO: Add other bind methods
 
-		void write();
+		void write() const;
 
 	  private:
 		vk::raii::DescriptorSet m_set = nullptr;
 		std::vector<vk::WriteDescriptorSet> m_writes;
 		std::vector<vk::DescriptorBufferInfo> m_buffer_infos;
 
-		DescriptorSet(vk::raii::DescriptorSet&& set) : m_set(std::move(set)) {}
+		explicit DescriptorSet(vk::raii::DescriptorSet&& set) : m_set(std::move(set)) {}
 
 		friend class DescriptorPool;
 	};
 
 	class DescriptorPool {
 	  public:
-		DescriptorPool(Device& device) : m_device(device) {}
+		explicit DescriptorPool(Device& device) : m_device(device) {}
 		~DescriptorPool() = default;
 
 		DescriptorPool(const DescriptorPool&) = delete;
@@ -89,22 +84,22 @@ namespace Vulxels::GFX {
 		}
 
 		void add_pool_size(vk::DescriptorType type, u32 size) {
-			m_sizes.push_back({type, size});
+			m_sizes.emplace_back(type, size);
 		}
 
-		void set_max_sets(u32 max) {
+		void set_max_sets(const u32 max) {
 			m_max_sets = max;
 		}
 
 		void create();
 
-		DescriptorSet allocate(DescriptorLayout& layout);
+		DescriptorSet allocate(DescriptorLayout& layout) const;
 		// TODO: Add a method to allocate multiple descriptor sets
 
 	  private:
 		Device& m_device;
 		vk::raii::DescriptorPool m_pool = nullptr;
 		std::vector<vk::DescriptorPoolSize> m_sizes;
-		u32 m_max_sets;
+		u32 m_max_sets = 0;
 	};
 } // namespace Vulxels::GFX

@@ -11,16 +11,15 @@
 
 using namespace Vulxels::GFX;
 
-Queue::Queue(Device& device, u32 index) : m_index(index) {
+Queue::Queue(Device& device, const u32 index) : m_index(index) {
 	m_queue = device.device().getQueue(index, 0);
 }
 
-std::tuple<u32, u32>
-Queue::find_families(vk::raii::PhysicalDevice& device, vk::raii::SurfaceKHR& surface) {
+std::tuple<u32, u32> Queue::find_families(const vk::raii::PhysicalDevice& device, const vk::raii::SurfaceKHR& surface) {
 	std::optional<u32> graphics;
 	std::optional<u32> present;
 
-	auto queue_families = device.getQueueFamilyProperties();
+	const auto queue_families = device.getQueueFamilyProperties();
 	for (u32 i = 0; i < queue_families.size(); i++) {
 		if (queue_families[i].queueFlags & vk::QueueFlagBits::eGraphics) {
 			graphics = i;

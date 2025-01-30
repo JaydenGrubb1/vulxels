@@ -30,24 +30,18 @@ int main(int, char** argv) {
 	}
 #endif
 
-	VX_LOG(
-		"Vulxels v{}.{}.{}",
-		VULXELS_VERSION_MAJOR,
-		VULXELS_VERSION_MINOR,
-		VULXELS_VERSION_PATCH
-	);
+	VX_LOG("Vulxels v{}.{}.{}", VX_VERSION_MAJOR, VX_VERSION_MINOR, VX_VERSION_PATCH);
+#ifndef NDEBUG
+	VX_WARN("Running in debug mode");
+	spdlog::set_level(spdlog::level::debug);
+#endif
 
 	try {
 		Vulxels::App app;
 		app.run();
 	} catch (const std::exception& e) {
-		fprintf(stderr, "\u001b[31mUnhandled exception: %s\u001b[0m\n", e.what());
-		SDL_ShowSimpleMessageBox(
-			SDL_MESSAGEBOX_ERROR,
-			"Unhandled exception",
-			e.what(),
-			nullptr
-		);
+		VX_CRIT("Unhandled exception: {}", e.what());
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Unhandled exception", e.what(), nullptr);
 		return EXIT_FAILURE;
 	}
 

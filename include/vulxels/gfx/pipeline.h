@@ -17,16 +17,16 @@ namespace Vulxels::GFX {
 	class Pipeline {
 	  public:
 		struct Builder {
-			Builder(Device& device) : m_device(device) {}
+			explicit Builder(Device& device) : m_device(device) {}
 			~Builder() = default;
 
 			Builder(const Builder&) = delete;
 			Builder& operator=(const Builder&) = delete;
 
 			Builder& add_shader_stage(
-				vk::ShaderModule module,
-				vk::ShaderStageFlagBits stage,
-				std::string_view entry = "main"
+				const vk::ShaderModule module,
+				const vk::ShaderStageFlagBits stage,
+				const std::string_view entry = "main"
 			) {
 				vk::PipelineShaderStageCreateInfo shader_stage;
 				shader_stage.setStage(stage);
@@ -36,48 +36,46 @@ namespace Vulxels::GFX {
 				return *this;
 			}
 
-			Builder& add_vertex_binding_description(
-				u32 binding,
-				u32 stride,
-				vk::VertexInputRate rate
-			) {
-				vertex_bindings.push_back(vk::VertexInputBindingDescription()
-											  .setBinding(binding)
-											  .setStride(stride)
-											  .setInputRate(rate));
+			Builder&
+			add_vertex_binding_description(const u32 binding, const u32 stride, const vk::VertexInputRate rate) {
+				vertex_bindings.push_back(
+					vk::VertexInputBindingDescription().setBinding(binding).setStride(stride).setInputRate(rate)
+				);
 				return *this;
 			}
 
 			Builder& add_vertex_attribute_description(
-				u32 binding,
-				u32 location,
-				vk::Format format,
-				u32 offset
+				const u32 binding,
+				const u32 location,
+				const vk::Format format,
+				const u32 offset
 			) {
-				vertex_attributes.push_back(vk::VertexInputAttributeDescription()
-												.setBinding(binding)
-												.setLocation(location)
-												.setFormat(format)
-												.setOffset(offset));
+				vertex_attributes.push_back(
+					vk::VertexInputAttributeDescription()
+						.setBinding(binding)
+						.setLocation(location)
+						.setFormat(format)
+						.setOffset(offset)
+				);
 				return *this;
 			}
 
-			Builder& set_topology(vk::PrimitiveTopology topology) {
+			Builder& set_topology(const vk::PrimitiveTopology topology) {
 				input_assembly_state.setTopology(topology);
 				return *this;
 			}
 
-			Builder& set_primitive_restart(bool enable) {
+			Builder& set_primitive_restart(const bool enable) {
 				input_assembly_state.setPrimitiveRestartEnable(enable);
 				return *this;
 			}
 
-			Builder& set_viewport_count(u32 count) {
+			Builder& set_viewport_count(const u32 count) {
 				viewport_state.setViewportCount(count);
 				return *this;
 			}
 
-			Builder& set_scissor_count(u32 count) {
+			Builder& set_scissor_count(const u32 count) {
 				viewport_state.setScissorCount(count);
 				return *this;
 			}
@@ -92,33 +90,32 @@ namespace Vulxels::GFX {
 				return *this;
 			}
 
-			Builder& enable_depth_clamp(bool enable) {
+			Builder& enable_depth_clamp(const bool enable) {
 				rasterization_state.setDepthClampEnable(enable);
 				return *this;
 			}
 
-			Builder& enable_rasterizer_discard(bool enable) {
+			Builder& enable_rasterizer_discard(const bool enable) {
 				rasterization_state.setRasterizerDiscardEnable(enable);
 				return *this;
 			}
 
-			Builder& set_polygon_mode(vk::PolygonMode mode) {
+			Builder& set_polygon_mode(const vk::PolygonMode mode) {
 				rasterization_state.setPolygonMode(mode);
 				return *this;
 			}
 
-			Builder& set_cull_mode(vk::CullModeFlags mode) {
+			Builder& set_cull_mode(const vk::CullModeFlags mode) {
 				rasterization_state.setCullMode(mode);
 				return *this;
 			}
 
-			Builder& set_front_face(vk::FrontFace face) {
+			Builder& set_front_face(const vk::FrontFace face) {
 				rasterization_state.setFrontFace(face);
 				return *this;
 			}
 
-			Builder&
-			set_depth_bias(float constant_factor, float clamp, float slope_factor) {
+			Builder& set_depth_bias(const float constant_factor, const float clamp, const float slope_factor) {
 				rasterization_state.setDepthBiasEnable(true);
 				rasterization_state.setDepthBiasConstantFactor(constant_factor);
 				rasterization_state.setDepthBiasClamp(clamp);
@@ -126,22 +123,22 @@ namespace Vulxels::GFX {
 				return *this;
 			}
 
-			Builder& set_line_width(float width) {
+			Builder& set_line_width(const float width) {
 				rasterization_state.setLineWidth(width);
 				return *this;
 			}
 
-			Builder& enable_sample_shading(bool enable) {
+			Builder& enable_sample_shading(const bool enable) {
 				multisample_state.setSampleShadingEnable(enable);
 				return *this;
 			}
 
-			Builder& set_rasterization_samples(vk::SampleCountFlagBits samples) {
+			Builder& set_rasterization_samples(const vk::SampleCountFlagBits samples) {
 				multisample_state.setRasterizationSamples(samples);
 				return *this;
 			}
 
-			Builder& set_min_sample_shading(float min) {
+			Builder& set_min_sample_shading(const float min) {
 				multisample_state.setMinSampleShading(min);
 				return *this;
 			}
@@ -151,68 +148,67 @@ namespace Vulxels::GFX {
 				return *this;
 			}
 
-			Builder& enable_alpha_to_coverage(bool enable) {
+			Builder& enable_alpha_to_coverage(const bool enable) {
 				multisample_state.setAlphaToCoverageEnable(enable);
 				return *this;
 			}
 
-			Builder& enable_alpha_to_one(bool enable) {
+			Builder& enable_alpha_to_one(const bool enable) {
 				multisample_state.setAlphaToOneEnable(enable);
 				return *this;
 			}
 
-			Builder& enable_depth_test(bool enable) {
+			Builder& enable_depth_test(const bool enable) {
 				depth_stencil_state.setDepthTestEnable(enable);
 				return *this;
 			}
 
-			Builder& enable_depth_write(bool enable) {
+			Builder& enable_depth_write(const bool enable) {
 				depth_stencil_state.setDepthWriteEnable(enable);
 				return *this;
 			}
 
-			Builder& set_depth_compare_op(vk::CompareOp op) {
+			Builder& set_depth_compare_op(const vk::CompareOp op) {
 				depth_stencil_state.setDepthCompareOp(op);
 				return *this;
 			}
 
-			Builder& enable_depth_bounds_test(bool enable) {
+			Builder& enable_depth_bounds_test(const bool enable) {
 				depth_stencil_state.setDepthBoundsTestEnable(enable);
 				return *this;
 			}
 
-			Builder& enable_stencil_test(bool enable) {
+			Builder& enable_stencil_test(const bool enable) {
 				depth_stencil_state.setStencilTestEnable(enable);
 				return *this;
 			}
 
-			Builder& set_front_stencil_state(vk::StencilOpState state) {
+			Builder& set_front_stencil_state(const vk::StencilOpState& state) {
 				depth_stencil_state.setFront(state);
 				return *this;
 			}
 
-			Builder& set_back_stencil_state(vk::StencilOpState state) {
+			Builder& set_back_stencil_state(const vk::StencilOpState& state) {
 				depth_stencil_state.setBack(state);
 				return *this;
 			}
 
-			Builder& set_min_depth_bounds(float min) {
+			Builder& set_min_depth_bounds(const float min) {
 				depth_stencil_state.setMinDepthBounds(min);
 				return *this;
 			}
 
-			Builder& set_max_depth_bounds(float max) {
+			Builder& set_max_depth_bounds(const float max) {
 				depth_stencil_state.setMaxDepthBounds(max);
 				return *this;
 			}
 
-			Builder&
-			add_color_blend_attachment(vk::PipelineColorBlendAttachmentState attachment) {
+			Builder& add_color_blend_attachment(const vk::PipelineColorBlendAttachmentState& attachment) {
 				color_blend_attachments.push_back(attachment);
 				return *this;
 			}
 
-			Builder& set_color_blend_logic_op(vk::LogicOp op) {
+			Builder& set_color_blend_logic_op(const vk::LogicOp op) {
 				color_blend_state.setLogicOpEnable(true);
 				color_blend_state.setLogicOp(op);
 				return *this;
@@ -223,22 +219,22 @@ namespace Vulxels::GFX {
 				return *this;
 			}
 
-			Builder& add_dynamic_state(vk::DynamicState state) {
+			Builder& add_dynamic_state(const vk::DynamicState state) {
 				dynamic_states.push_back(state);
 				return *this;
 			}
 
-			Builder& add_descriptor_set_layout(vk::DescriptorSetLayout layout) {
+			Builder& add_descriptor_set_layout(const vk::DescriptorSetLayout layout) {
 				descriptor_set_layouts.push_back(layout);
 				return *this;
 			}
 
-			Builder& add_push_constant_range(vk::PushConstantRange range) {
+			Builder& add_push_constant_range(const vk::PushConstantRange range) {
 				push_constant_ranges.push_back(range);
 				return *this;
 			}
 
-			Builder& set_render_pass(std::shared_ptr<vk::raii::RenderPass> pass) {
+			Builder& set_render_pass(const std::shared_ptr<vk::raii::RenderPass>& pass) {
 				render_pass = pass;
 				return *this;
 			}
